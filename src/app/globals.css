@@ -96,7 +96,7 @@ button { font: inherit; color: inherit; background: none; border: 0; cursor: poi
 }
 .nav a::after {
   content: ""; position: absolute; left: 0; right: 0; bottom: 0;
-  height: 1px; background: var(--ink);
+  height: 1px; background: var(--sage-deep);
   transform: scaleX(0); transform-origin: left;
   transition: transform .35s ease;
 }
@@ -124,7 +124,7 @@ button { font: inherit; color: inherit; background: none; border: 0; cursor: poi
   background-size: cover; background-position: center;
   background-color: var(--cream-deep);
   margin-left: -10px;
-  outline: 3px solid var(--cream);
+  outline: 3px solid var(--sage-soft);
   box-shadow: 0 6px 18px -14px rgba(0,0,0,.35);
 }
 .hero-thumbs .t:first-child { margin-left: 0; }
@@ -217,7 +217,7 @@ button { font: inherit; color: inherit; background: none; border: 0; cursor: poi
 }
 .editorial-intro .sub {
   font-size: 14px;
-  color: var(--muted);
+  color: var(--sage-deep);
   letter-spacing: .02em;
 }
 
@@ -430,7 +430,7 @@ button { font: inherit; color: inherit; background: none; border: 0; cursor: poi
 .story-text { padding-right: 6%; }
 .story-eyebrow {
   font-size: 12px; letter-spacing: .18em;
-  color: var(--muted);
+  color: var(--sage-deep);
   margin-bottom: 24px;
 }
 .story-heading {
@@ -603,7 +603,7 @@ button { font: inherit; color: inherit; background: none; border: 0; cursor: poi
   text-align: center;
   font-size: 12px;
   letter-spacing: .22em;
-  color: var(--muted);
+  color: var(--sage-deep);
   margin-bottom: 38px;
 }
 .quote-slider {
@@ -626,7 +626,7 @@ button { font: inherit; color: inherit; background: none; border: 0; cursor: poi
   letter-spacing: -.01em;
 }
 .quote .mark {
-  color: var(--ink);
+  color: var(--sage);
   margin: 0 .12em;
   font-size: 1.05em;
   line-height: 0;
@@ -706,7 +706,7 @@ button { font: inherit; color: inherit; background: none; border: 0; cursor: poi
   font-weight: 500;
   letter-spacing: .24em;
   text-transform: uppercase;
-  color: var(--muted);
+  color: var(--sage-deep);
   margin-bottom: 28px;
 }
 .cf-heading {
@@ -877,6 +877,7 @@ button { font: inherit; color: inherit; background: none; border: 0; cursor: poi
 .footer {
   padding: 100px var(--pad-x) 28px;
   position: relative;
+  border-top: 2px solid var(--sage);
 }
 .footer-grid {
   display: grid;

@@ -263,7 +263,7 @@ export default function Home() {
               <div className="story-eyebrow">THE JOURNEY</div>
               <h2 className="story-heading">
                 <span>Somboun&apos;s</span>
-                <span><em style={{ fontStyle: "italic", fontWeight: 500 }}>Story</em></span>
+                <span><em style={{ fontStyle: "italic", fontWeight: 500, color: "var(--sage-deep)" }}>Story</em></span>
               </h2>
               <p className="story-body">
                 Somboun June is a distinguished beauty and wellness professional based in Winnipeg Manitoba, specializing in laser skin treatments and premium skincare products.
