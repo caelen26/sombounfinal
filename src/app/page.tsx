@@ -54,6 +54,12 @@ export default function Home() {
   const extendedReviews = [reviews[reviews.length - 1], ...reviews, reviews[0]];
   const [vIdx, setVIdx] = useState(1); // start at first real slide (index 1)
   const [noAnim, setNoAnim] = useState(false);
+  const [cfSubmitted, setCfSubmitted] = useState(false);
+
+  const handleContactSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    setCfSubmitted(true);
+  };
 
   const goNext = () => setVIdx((i) => i + 1);
   const goPrev = () => setVIdx((i) => i - 1);
@@ -362,6 +368,73 @@ export default function Home() {
           <div className="frame bg-film-6" />
           <div className="frame bg-film-7" />
           <div className="frame bg-film-8" />
+        </div>
+      </section>
+
+      {/* ── Contact Form ── */}
+      <section className="cf-section">
+        <div className="section-inner">
+          <div className="cf-grid">
+
+            {/* Left: intro */}
+            <div className="cf-left">
+              <div className="cf-eyebrow">Contact</div>
+              <h2 className="cf-heading">Book a<br />Consultation</h2>
+              <p className="cf-tagline">Ready to begin your skin journey? Send a message and we&rsquo;ll be in touch within 24 hours.</p>
+              <div className="cf-meta">
+                <div className="cf-meta-item">
+                  <span className="cf-meta-label">Location</span>
+                  <span className="cf-meta-value">Winnipeg, Manitoba</span>
+                </div>
+                <div className="cf-meta-item">
+                  <span className="cf-meta-label">Hours</span>
+                  <span className="cf-meta-value">Mon–Fri, 9am–6pm CST</span>
+                </div>
+                <div className="cf-meta-item">
+                  <span className="cf-meta-label">Email</span>
+                  <span className="cf-meta-value">hello@sombounjune.com</span>
+                </div>
+              </div>
+            </div>
+
+            {/* Right: form */}
+            <div className="cf-right">
+              {cfSubmitted ? (
+                <div className="cf-thanks">
+                  <p className="cf-thanks-eyebrow">Message sent</p>
+                  <h3 className="cf-thanks-heading">Thank you.</h3>
+                  <p className="cf-thanks-text">We&rsquo;ve received your message and will be in touch within 24 hours.</p>
+                </div>
+              ) : (
+                <form className="cf-form" onSubmit={handleContactSubmit}>
+                  <div className="cf-row">
+                    <div className="cf-field">
+                      <label className="cf-label" htmlFor="cf-first">First Name</label>
+                      <input className="cf-input" id="cf-first" name="first" type="text" placeholder="First" required />
+                    </div>
+                    <div className="cf-field">
+                      <label className="cf-label" htmlFor="cf-last">Last Name</label>
+                      <input className="cf-input" id="cf-last" name="last" type="text" placeholder="Last" required />
+                    </div>
+                  </div>
+                  <div className="cf-field">
+                    <label className="cf-label" htmlFor="cf-email">Email</label>
+                    <input className="cf-input" id="cf-email" name="email" type="email" placeholder="hello@example.com" required />
+                  </div>
+                  <div className="cf-field">
+                    <label className="cf-label" htmlFor="cf-phone">Phone <span className="cf-optional">(optional)</span></label>
+                    <input className="cf-input" id="cf-phone" name="phone" type="tel" placeholder="+1 (204) 000–0000" />
+                  </div>
+                  <div className="cf-field">
+                    <label className="cf-label" htmlFor="cf-message">Message</label>
+                    <textarea className="cf-textarea" id="cf-message" name="message" placeholder="I&apos;m interested in learning more about..." rows={4} required />
+                  </div>
+                  <button type="submit" className="cf-submit">Send Message →</button>
+                </form>
+              )}
+            </div>
+
+          </div>
         </div>
       </section>
 
