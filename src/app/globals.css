@@ -27,7 +27,11 @@
 .num-brand { font-family: var(--serif); }
 
 * { box-sizing: border-box; }
+html { scroll-behavior: smooth; }
 html, body { margin: 0; padding: 0; }
+
+/* Offset anchor targets so sticky header doesn't cover them */
+[id] { scroll-margin-top: 80px; }
 body {
   font-family: var(--sans);
   background: var(--cream);

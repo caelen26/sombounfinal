@@ -165,10 +165,10 @@ export default function Home() {
       <header className="header">
         <div className="logo">Somboun June</div>
         <nav className="nav" aria-label="primary">
-          <a href="#">The Journey</a>
-          <a href="#">NŪM</a>
-          <a href="#">Laser Skin Care</a>
-          <a href="#">Contact</a>
+          <a href="#journey">The Journey</a>
+          <a href="#num">NŪM</a>
+          <a href="#laser">Laser Skin Care</a>
+          <a href="#contact">Contact</a>
         </nav>
         <div className="icon-row">
           <button className="icon-btn" aria-label="Search">
@@ -215,10 +215,10 @@ export default function Home() {
           </button>
         </div>
         <nav className="mobile-nav" aria-label="mobile primary">
-          <a href="#" onClick={() => setMenuOpen(false)}>The Journey</a>
-          <a href="#" onClick={() => setMenuOpen(false)}>NŪM</a>
-          <a href="#" onClick={() => setMenuOpen(false)}>Laser Skin Care</a>
-          <a href="#" onClick={() => setMenuOpen(false)}>Contact</a>
+          <a href="#journey" onClick={() => setMenuOpen(false)}>The Journey</a>
+          <a href="#num" onClick={() => setMenuOpen(false)}>NŪM</a>
+          <a href="#laser" onClick={() => setMenuOpen(false)}>Laser Skin Care</a>
+          <a href="#contact" onClick={() => setMenuOpen(false)}>Contact</a>
         </nav>
       </div>
 
@@ -256,7 +256,7 @@ export default function Home() {
         </div>
       </section>
 
-      <section className="section">
+      <section id="journey" className="section">
         <div className="section-inner">
           <div className="story-grid">
             <div className="story-text">
@@ -279,7 +279,7 @@ export default function Home() {
         </div>
       </section>
 
-      <section className="section">
+      <section id="laser" className="section">
         <div className="section-inner">
           <div className="editorial-intro">
             <h2>Laser Skin Care</h2>
@@ -349,7 +349,7 @@ export default function Home() {
         </div>
       </section>
 
-      <section className="sage-section">
+      <section id="num" className="sage-section">
         <div className="sage-grid">
           <div className="sage-feature">
             <div className="quatre" style={{ backgroundImage: 'url("/refined-num-image.png")' }} />
@@ -409,7 +409,7 @@ export default function Home() {
       </section>
 
       {/* ── Contact Form ── */}
-      <section className="cf-section">
+      <section id="contact" className="cf-section">
         <div className="section-inner">
           <div className="cf-grid">
 
@@ -483,18 +483,18 @@ export default function Home() {
               We are dedicated to helping you feel confident in your own skin. Our treatments focus on enhancing your natural beauty, restoring radiance, and gently improving skin health from the inside out.
             </p>
             <div className="footer-ctas">
-              <a className="footer-cta" href="#">Get Started <span>→</span></a>
-              <a className="footer-cta" href="#">Contact Us <span>→</span></a>
+              <a className="footer-cta" href="#journey">Get Started <span>→</span></a>
+              <a className="footer-cta" href="#contact">Contact Us <span>→</span></a>
             </div>
           </div>
 
           <div className="footer-col">
             <h4>Navigate</h4>
             <ul>
-              <li><a href="#">The Journey</a></li>
-              <li><a href="#">NŪM</a></li>
-              <li><a href="#">Laser Skin Care</a></li>
-              <li><a href="#">Contact</a></li>
+              <li><a href="#journey">The Journey</a></li>
+              <li><a href="#num">NŪM</a></li>
+              <li><a href="#laser">Laser Skin Care</a></li>
+              <li><a href="#contact">Contact</a></li>
             </ul>
           </div>
 
