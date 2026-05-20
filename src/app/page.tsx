@@ -55,11 +55,18 @@ export default function Home() {
   const [vIdx, setVIdx] = useState(1); // start at first real slide (index 1)
   const [noAnim, setNoAnim] = useState(false);
   const [cfSubmitted, setCfSubmitted] = useState(false);
+  const [menuOpen, setMenuOpen] = useState(false);
 
   const handleContactSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     setCfSubmitted(true);
   };
+
+  // Lock body scroll when mobile menu is open
+  useEffect(() => {
+    document.body.style.overflow = menuOpen ? "hidden" : "";
+    return () => { document.body.style.overflow = ""; };
+  }, [menuOpen]);
 
   const goNext = () => setVIdx((i) => i + 1);
   const goPrev = () => setVIdx((i) => i - 1);
@@ -183,7 +190,37 @@ export default function Home() {
             </svg>
           </button>
         </div>
+
+        {/* Hamburger — visible on mobile only */}
+        <button
+          className={`hamburger${menuOpen ? " open" : ""}`}
+          onClick={() => setMenuOpen((m) => !m)}
+          aria-label={menuOpen ? "Close menu" : "Open menu"}
+          aria-expanded={menuOpen}
+        >
+          <span />
+          <span />
+          <span />
+        </button>
       </header>
+
+      {/* Mobile full-screen nav overlay */}
+      <div className={`mobile-overlay${menuOpen ? " open" : ""}`} aria-hidden={!menuOpen}>
+        <div className="mobile-overlay-top">
+          <div className="logo">Somboun June</div>
+          <button className="mobile-close" onClick={() => setMenuOpen(false)} aria-label="Close menu">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round">
+              <path d="M18 6L6 18M6 6l12 12" />
+            </svg>
+          </button>
+        </div>
+        <nav className="mobile-nav" aria-label="mobile primary">
+          <a href="#" onClick={() => setMenuOpen(false)}>The Journey</a>
+          <a href="#" onClick={() => setMenuOpen(false)}>NŪM</a>
+          <a href="#" onClick={() => setMenuOpen(false)}>Laser Skin Care</a>
+          <a href="#" onClick={() => setMenuOpen(false)}>Contact</a>
+        </nav>
+      </div>
 
       <section className="hero">
         <div className="hero-inner">
@@ -204,7 +241,7 @@ export default function Home() {
             <div
               className="quatre"
               data-quat-style="video"
-              style={{ aspectRatio: "16/6.8", overflow: "hidden" }}
+              style={{ overflow: "hidden" }}
             >
               <video
                 src="/video.mp4"

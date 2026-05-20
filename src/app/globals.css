@@ -941,6 +941,186 @@ button { font: inherit; color: inherit; background: none; border: 0; cursor: poi
 .subfoot .right { display: flex; gap: 18px; }
 
 /* ===========================================================
+   MOBILE NAV — hamburger + full-screen overlay
+   =========================================================== */
+.hamburger {
+  display: none; /* shown only on mobile */
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  gap: 5px;
+  width: 44px;
+  height: 44px;
+  background: none;
+  border: none;
+  cursor: pointer;
+  flex-shrink: 0;
+  padding: 0;
+}
+.hamburger span {
+  display: block;
+  width: 22px;
+  height: 1.5px;
+  background: var(--ink);
+  transform-origin: center;
+  transition: transform .28s ease, opacity .28s ease;
+}
+.hamburger.open span:nth-child(1) { transform: translateY(6.5px) rotate(45deg); }
+.hamburger.open span:nth-child(2) { opacity: 0; }
+.hamburger.open span:nth-child(3) { transform: translateY(-6.5px) rotate(-45deg); }
+
+.mobile-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 60;
+  background: var(--cream);
+  display: flex;
+  flex-direction: column;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity .28s cubic-bezier(0,.2,0,1);
+}
+.mobile-overlay.open {
+  opacity: 1;
+  pointer-events: all;
+}
+.mobile-overlay-top {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 16px var(--pad-x);
+  border-bottom: 1px solid var(--line);
+  flex-shrink: 0;
+}
+.mobile-close {
+  width: 44px;
+  height: 44px;
+  display: grid;
+  place-items: center;
+  background: none;
+  border: none;
+  cursor: pointer;
+  color: var(--ink);
+}
+.mobile-close svg { width: 22px; height: 22px; }
+
+.mobile-nav {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  padding: 0 var(--pad-x);
+}
+.mobile-nav a {
+  font-family: var(--serif);
+  font-weight: 300;
+  font-size: clamp(28px, 8vw, 44px);
+  letter-spacing: -.01em;
+  color: var(--ink);
+  padding: 22px 0;
+  border-bottom: 1px solid var(--line);
+  display: block;
+  transition: color .2s;
+}
+.mobile-nav a:last-child { border-bottom: none; }
+.mobile-nav a:active { color: var(--sage-deep); }
+
+/* ===========================================================
+   RESPONSIVE — 768px and below
+   =========================================================== */
+@media (max-width: 768px) {
+
+  /* ── Header ── */
+  .header {
+    justify-content: space-between;
+    gap: 0;
+    padding: 16px var(--pad-x);
+  }
+  .nav    { display: none; }
+  .icon-row { display: none; }
+  .hamburger { display: flex; }
+
+  /* ── Hero ── */
+  .hero { padding: 20px var(--pad-x) 16px; }
+  .hero-thumbs { padding-left: 0; justify-content: flex-start; }
+  .hero-thumbs .t { width: 52px; height: 52px; }
+  .hero-headline {
+    white-space: normal;
+    font-size: clamp(32px, 8.5vw, 52px);
+  }
+  .hero-media .quatre { aspect-ratio: 4 / 3; }
+
+  /* ── Section spacing ── */
+  .section { padding: 72px 0; }
+  .editorial-intro { margin-bottom: 44px; }
+  .editorial-intro h2 { font-size: clamp(36px, 9vw, 60px); }
+
+  /* ── Story ── */
+  .story-grid {
+    grid-template-columns: 1fr;
+    gap: 40px;
+  }
+  .story-text { padding-right: 0; }
+  .story-heading { font-size: clamp(38px, 10vw, 60px); }
+  .story-body { font-size: 16px; }
+
+  /* ── NŪM / Sage ── */
+  .sage-section { padding: clamp(60px, 9vw, 100px) var(--pad-x); }
+  .sage-grid {
+    grid-template-columns: 1fr;
+    gap: 40px;
+  }
+  .sage-feature { aspect-ratio: unset; }
+  .sage-feature .quatre { aspect-ratio: 4 / 3; }
+  .sage-right { padding-top: 0; }
+  .sage-eyebrow { text-align: left; }
+  .sage-body { max-width: 100%; }
+
+  /* ── Testimonials ── */
+  .testimonial { padding: 72px var(--pad-x) 48px; }
+  .quote { padding: 0 2%; }
+  .t-meta { margin-top: 44px; }
+  .filmstrip {
+    grid-template-columns: repeat(4, 1fr);
+    margin-top: 48px;
+    gap: 8px;
+  }
+  .filmstrip .frame:nth-child(n+5) { display: none; }
+
+  /* ── Contact form ── (already has 900px breakpoint, reinforce) */
+  .cf-section { padding: 72px var(--pad-x); }
+
+  /* ── Footer ── */
+  .footer { padding: 60px var(--pad-x) 28px; }
+  .footer-grid {
+    grid-template-columns: 1fr;
+    gap: 44px;
+  }
+  .footer-ctas {
+    grid-template-columns: 1fr;
+    gap: 0;
+    max-width: 100%;
+  }
+  .back-to-top { display: none; }
+  .subfoot {
+    margin-top: 44px;
+    flex-direction: column;
+    gap: 6px;
+  }
+
+  /* ── Touch targets ── */
+  .icon-btn  { width: 44px; height: 44px; }
+  .t-meta .prev,
+  .t-meta .next { min-height: 44px; }
+}
+
+/* ── Very small phones (< 390px) ── */
+@media (max-width: 390px) {
+  .logo { font-size: 20px; }
+  .hero-headline { font-size: clamp(28px, 8vw, 40px); }
+}
+
+/* ===========================================================
    Image placeholder styling
    =========================================================== */
 .bg-hero        { background-image: url("https://picsum.photos/seed/anzana-hero/2200/950"); }
