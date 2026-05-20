@@ -18,8 +18,8 @@ const jost = Jost({
 });
 
 export const metadata: Metadata = {
-  title: "Anzana — Premium Skincare",
-  description: "Premium skincare for maximum results.",
+  title: "Somboun June — Premium Skincare",
+  description: "Premium skincare and laser treatments by Somboun June, Winnipeg.",
 };
 
 export default function RootLayout({

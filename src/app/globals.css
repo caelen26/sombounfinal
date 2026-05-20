@@ -1127,28 +1127,28 @@ button { font: inherit; color: inherit; background: none; border: 0; cursor: poi
 /* ===========================================================
    Image placeholder styling
    =========================================================== */
-.bg-hero        { background-image: url("https://picsum.photos/seed/anzana-hero/2200/950"); }
-.bg-thumb-1     { background-image: url("https://picsum.photos/seed/anzana-t1/200/200"); }
-.bg-thumb-2     { background-image: url("https://picsum.photos/seed/anzana-t2/200/200"); }
-.bg-thumb-3     { background-image: url("https://picsum.photos/seed/anzana-t3/200/200"); }
+.bg-hero        { background-image: url("https://picsum.photos/seed/somboun-hero/2200/950"); }
+.bg-thumb-1     { background-image: url("https://picsum.photos/seed/somboun-t1/200/200"); }
+.bg-thumb-2     { background-image: url("https://picsum.photos/seed/somboun-t2/200/200"); }
+.bg-thumb-3     { background-image: url("https://picsum.photos/seed/somboun-t3/200/200"); }
 
-.bg-retinol     { background-image: url("https://picsum.photos/seed/anzana-ret/800/1050"); }
-.bg-toner       { background-image: url("https://picsum.photos/seed/anzana-ton/800/1000"); }
+.bg-retinol     { background-image: url("https://picsum.photos/seed/somboun-ret/800/1050"); }
+.bg-toner       { background-image: url("https://picsum.photos/seed/somboun-ton/800/1000"); }
 .bg-stones      { background-image: url("https://images.unsplash.com/photo-1608571423902-eed4a5ad8108?w=900&q=80"); }
-.bg-ampoule     { background-image: url("https://picsum.photos/seed/anzana-amp/800/1050"); }
-.bg-sunscreen   { background-image: url("https://picsum.photos/seed/anzana-sun/600/1000"); }
+.bg-ampoule     { background-image: url("https://picsum.photos/seed/somboun-amp/800/1050"); }
+.bg-sunscreen   { background-image: url("https://picsum.photos/seed/somboun-sun/600/1000"); }
 
 .bg-greenmask   { background-image: url("/somboun-portrait-2.png"); }
-.bg-baemask     { background-image: url("https://picsum.photos/seed/anzana-bae/900/1170"); }
-.bg-baethumb    { background-image: url("https://picsum.photos/seed/anzana-bth/700/600"); }
+.bg-baemask     { background-image: url("https://picsum.photos/seed/somboun-bae/900/1170"); }
+.bg-baethumb    { background-image: url("https://picsum.photos/seed/somboun-bth/700/600"); }
 
-.bg-mella       { background-image: url("https://picsum.photos/seed/anzana-mel/200/200"); }
+.bg-mella       { background-image: url("https://picsum.photos/seed/somboun-mel/200/200"); }
 
-.bg-film-1 { background-image: url("https://picsum.photos/seed/anzana-f1/400/530"); }
-.bg-film-2 { background-image: url("https://picsum.photos/seed/anzana-f2/400/530"); }
-.bg-film-3 { background-image: url("https://picsum.photos/seed/anzana-f3/400/530"); }
-.bg-film-4 { background-image: url("https://picsum.photos/seed/anzana-f4/400/530"); }
-.bg-film-5 { background-image: url("https://picsum.photos/seed/anzana-f5/400/530"); }
-.bg-film-6 { background-image: url("https://picsum.photos/seed/anzana-f6/400/530"); }
-.bg-film-7 { background-image: url("https://picsum.photos/seed/anzana-f7/400/530"); }
-.bg-film-8 { background-image: url("https://picsum.photos/seed/anzana-f8/400/530"); }
+.bg-film-1 { background-image: url("https://picsum.photos/seed/somboun-f1/400/530"); }
+.bg-film-2 { background-image: url("https://picsum.photos/seed/somboun-f2/400/530"); }
+.bg-film-3 { background-image: url("https://picsum.photos/seed/somboun-f3/400/530"); }
+.bg-film-4 { background-image: url("https://picsum.photos/seed/somboun-f4/400/530"); }
+.bg-film-5 { background-image: url("https://picsum.photos/seed/somboun-f5/400/530"); }
+.bg-film-6 { background-image: url("https://picsum.photos/seed/somboun-f6/400/530"); }
+.bg-film-7 { background-image: url("https://picsum.photos/seed/somboun-f7/400/530"); }
+.bg-film-8 { background-image: url("https://picsum.photos/seed/somboun-f8/400/530"); }
