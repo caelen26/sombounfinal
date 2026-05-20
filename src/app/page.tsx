@@ -392,7 +392,7 @@ export default function Home() {
                 </div>
                 <div className="cf-meta-item">
                   <span className="cf-meta-label">Email</span>
-                  <span className="cf-meta-value">hello@sombounjune.com</span>
+                  <span className="cf-meta-value">sombounp@gmail.com</span>
                 </div>
               </div>
             </div>
