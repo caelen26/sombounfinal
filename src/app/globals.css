@@ -159,7 +159,7 @@ button { font: inherit; color: inherit; background: none; border: 0; cursor: poi
   display: inline-block;
   width: clamp(90px, 12vw, 200px);
   height: 2px;
-  background: var(--ink);
+  background: var(--sage);
   vertical-align: middle;
   transform: translateY(-.12em);
   margin: 0 .14em;
@@ -389,6 +389,8 @@ button { font: inherit; color: inherit; background: none; border: 0; cursor: poi
   letter-spacing: -.01em;
   line-height: 1.2;
 }
+/* Sage card — stat values pick up the brand accent */
+.tx-card--sage .tx-stat-value { color: var(--sage-deep); }
 
 /* best for */
 .tx-ideal {
@@ -406,6 +408,9 @@ button { font: inherit; color: inherit; background: none; border: 0; cursor: poi
   .tx-card { transition: none; }
   .tx-card:hover { transform: none; }
 }
+
+/* Journey section — subtle sage background to distinguish the brand story */
+#journey { background: #eaf0eb; }
 
 /* ===========================================================
    SECTION C — STORY
@@ -811,7 +816,7 @@ button { font: inherit; color: inherit; background: none; border: 0; cursor: poi
   display: inline-flex;
   align-items: center;
   gap: 10px;
-  background: var(--ink);
+  background: var(--sage);
   color: var(--cream);
   font-family: var(--sans);
   font-size: 12px;
@@ -918,11 +923,11 @@ button { font: inherit; color: inherit; background: none; border: 0; cursor: poi
 .socials { display: flex; flex-wrap: wrap; gap: 10px; }
 .social-dot {
   width: 36px; height: 36px; border-radius: 50%;
-  background: var(--ink);
+  background: var(--sage);
   display: grid; place-items: center;
   color: var(--cream);
 }
-.social-dot.ring { background: transparent; color: var(--ink); border: 1px solid var(--ink); }
+.social-dot.ring { background: transparent; color: var(--sage-deep); border: 1px solid var(--sage); }
 .social-dot svg { width: 16px; height: 16px; }
 
 .back-to-top {

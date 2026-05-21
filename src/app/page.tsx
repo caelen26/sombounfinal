@@ -232,7 +232,7 @@ export default function Home() {
 
           <div className="hero-headline-row">
             <h1 className="hero-headline">
-              Good Skin, Good Hair,<br />
+              Good Skin, Good Hair,<span className="gap" aria-hidden="true" /><br />
               Great Life
             </h1>
           </div>
