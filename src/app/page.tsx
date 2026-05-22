@@ -1,6 +1,8 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
+
+const RIMAN_URL = "https://mall.riman.com/member-ship/home?referrerCode=4007357701&utm_source=ig&utm_medium=social&utm_content=link_in_bio&fbclid=PAZXh0bgNhZW0CMTEAc3J0YwZhcHBfaWQPOTM2NjE5NzQzMzkyNDU5AAGnSzlvjf0O5Yyn99fFymE0Aky-MiXIB-0PzUTIDENClmui_dqi2nUpcTGlGEc_aem_a7CJKao6iWR6PtZ_yXHYNw";
 
 const reviews = [
   {
@@ -57,6 +59,61 @@ export default function Home() {
   const [cfSubmitted, setCfSubmitted] = useState(false);
   const [menuOpen, setMenuOpen] = useState(false);
 
+  // Product modal state + refs
+  const [modalOpen, setModalOpen] = useState(false);
+  const [openAccordion, setOpenAccordion] = useState<"details" | "ingredients" | null>("details");
+  const lastFocusedRef = useRef<HTMLElement | null>(null);
+  const closeBtnRef = useRef<HTMLButtonElement | null>(null);
+  const modalPanelRef = useRef<HTMLDivElement | null>(null);
+
+  // Cart state
+  type CartItem = { id: string; name: string; price: number; image: string; quantity: number };
+  const [cartItems, setCartItems] = useState<CartItem[]>([]);
+  const [cartOpen, setCartOpen] = useState(false);
+  const [addedFlash, setAddedFlash] = useState<"card" | "modal" | null>(null);
+  const cartCloseRef = useRef<HTMLButtonElement | null>(null);
+  const cartTriggerRef = useRef<HTMLElement | null>(null);
+
+  const cartCount = cartItems.reduce((n, i) => n + i.quantity, 0);
+  const cartSubtotal = cartItems.reduce((s, i) => s + i.price * i.quantity, 0);
+
+  const addToCart = (item: Omit<CartItem, "quantity">, source: "card" | "modal") => {
+    setCartItems((prev) => {
+      const existing = prev.find((i) => i.id === item.id);
+      if (existing) {
+        return prev.map((i) => (i.id === item.id ? { ...i, quantity: i.quantity + 1 } : i));
+      }
+      return [...prev, { ...item, quantity: 1 }];
+    });
+    setAddedFlash(source);
+    window.setTimeout(() => setAddedFlash(null), 1200);
+  };
+  const updateQty = (id: string, delta: number) => {
+    setCartItems((prev) =>
+      prev
+        .map((i) => (i.id === id ? { ...i, quantity: Math.max(0, i.quantity + delta) } : i))
+        .filter((i) => i.quantity > 0)
+    );
+  };
+  const removeFromCart = (id: string) => setCartItems((prev) => prev.filter((i) => i.id !== id));
+  const handleCheckout = () => {
+    const lines = cartItems
+      .map((i) => `  - ${i.name} × ${i.quantity}  ($${(i.price * i.quantity).toFixed(2)})`)
+      .join("\n");
+    const subject = encodeURIComponent("NŪM Order Request");
+    const body = encodeURIComponent(
+      `Hello Somboun,\n\nI'd like to place the following order:\n\n${lines}\n\nSubtotal: $${cartSubtotal.toFixed(2)} CAD\n\nPlease send payment + shipping details. Thank you!\n`
+    );
+    window.location.href = `mailto:sombounp@gmail.com?subject=${subject}&body=${body}`;
+  };
+
+  const numTallow = {
+    id: "num-body-tallow",
+    name: "NŪM Body Tallow",
+    price: 29.99,
+    image: "/refined-num-image.png",
+  };
+
   const handleContactSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     setCfSubmitted(true);
@@ -67,6 +124,41 @@ export default function Home() {
     document.body.style.overflow = menuOpen ? "hidden" : "";
     return () => { document.body.style.overflow = ""; };
   }, [menuOpen]);
+
+  // Lock body scroll, manage focus, and bind ESC when the product modal is open
+  useEffect(() => {
+    if (!modalOpen) return;
+    const prev = document.body.style.overflow;
+    document.body.style.overflow = "hidden";
+    const id = requestAnimationFrame(() => closeBtnRef.current?.focus());
+    const onKey = (e: KeyboardEvent) => { if (e.key === "Escape") setModalOpen(false); };
+    window.addEventListener("keydown", onKey);
+    return () => {
+      document.body.style.overflow = prev;
+      window.removeEventListener("keydown", onKey);
+      cancelAnimationFrame(id);
+      lastFocusedRef.current?.focus();
+    };
+  }, [modalOpen]);
+
+  // Auto-open Details every time the modal opens
+  useEffect(() => { if (modalOpen) setOpenAccordion("details"); }, [modalOpen]);
+
+  // Lock body scroll + manage focus when cart drawer is open
+  useEffect(() => {
+    if (!cartOpen) return;
+    const prev = document.body.style.overflow;
+    document.body.style.overflow = "hidden";
+    const id = requestAnimationFrame(() => cartCloseRef.current?.focus());
+    const onKey = (e: KeyboardEvent) => { if (e.key === "Escape") setCartOpen(false); };
+    window.addEventListener("keydown", onKey);
+    return () => {
+      document.body.style.overflow = prev;
+      window.removeEventListener("keydown", onKey);
+      cancelAnimationFrame(id);
+      cartTriggerRef.current?.focus();
+    };
+  }, [cartOpen]);
 
   const goNext = () => setVIdx((i) => i + 1);
   const goPrev = () => setVIdx((i) => i - 1);
@@ -168,14 +260,20 @@ export default function Home() {
           <a href="#journey">The Journey</a>
           <a href="#num">NŪM</a>
           <a href="#laser">Laser Skin Care</a>
+          <a href={RIMAN_URL} target="_blank" rel="noopener noreferrer sponsored">Riman Skincare</a>
           <a href="#contact">Contact</a>
         </nav>
         <div className="icon-row">
-          <button className="icon-btn" aria-label="Cart">
+          <button
+            className="icon-btn icon-btn-cart"
+            aria-label={`Cart, ${cartCount} ${cartCount === 1 ? "item" : "items"}`}
+            onClick={(e) => { cartTriggerRef.current = e.currentTarget; setCartOpen(true); }}
+          >
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round">
               <path d="M5 8h14l-1.2 11.2A2 2 0 0 1 15.8 21H8.2a2 2 0 0 1-2-1.8L5 8Z" />
               <path d="M9 8V6a3 3 0 0 1 6 0v2" />
             </svg>
+            {cartCount > 0 && <span className="cart-badge" aria-hidden="true">{cartCount}</span>}
           </button>
         </div>
 
@@ -206,6 +304,7 @@ export default function Home() {
           <a href="#journey" onClick={() => setMenuOpen(false)}>The Journey</a>
           <a href="#num" onClick={() => setMenuOpen(false)}>NŪM</a>
           <a href="#laser" onClick={() => setMenuOpen(false)}>Laser Skin Care</a>
+          <a href={RIMAN_URL} target="_blank" rel="noopener noreferrer sponsored" onClick={() => setMenuOpen(false)}>Riman Skincare</a>
           <a href="#contact" onClick={() => setMenuOpen(false)}>Contact</a>
         </nav>
       </div>
@@ -337,26 +436,79 @@ export default function Home() {
         </div>
       </section>
 
-      <section id="num" className="sage-section">
-        <div className="sage-grid">
-          <div className="sage-feature">
-            <div className="quatre" style={{ backgroundImage: 'url("/refined-num-image.png")' }} />
+      <section id="num" className="ps-section sage-section">
+        <div className="ps-inner">
+          <div className="ps-intro">
+            <div className="ps-eyebrow">BEST-SELLING SKINCARE</div>
+            <h2 className="ps-heading"><span className="num-brand">NŪM</span><br />Skin Care</h2>
+            <p className="ps-lede">
+              Pasture-raised, grass-fed tallow paired with cold-pressed botanicals.
+              A small, considered line built for skin that asks for less, not more.
+            </p>
           </div>
-          <div className="sage-right">
-            <div className="sage-eyebrow">BEST-SELLING SKINCARE</div>
-            <h2 className="sage-heading">NŪM<br />Skin Care</h2>
-            <div className="sage-body">
-              <p>Grass-fed cattle are the best source for tallow-based skincare because they are animals that have been pasture-raised, providing a nutrient-rich diet. This results in tallow with a higher concentration of beneficial compounds, such as omega-3 fatty acids and antioxidants. These elements contribute to improved skin hydration, elasticity, and overall skin health.</p>
-              <ul>
-                <li>Pasture-Raised &amp; Grass-Fed</li>
-                <li>Rich in Omega-3 &amp; Antioxidants</li>
-                <li>Deep Hydration &amp; Elasticity</li>
-                <li>100% Biocompatible</li>
-              </ul>
+          <div className="ps-grid">
+            <div className="ps-card">
+              <button
+                type="button"
+                className="ps-card-trigger"
+                onClick={(e) => { lastFocusedRef.current = e.currentTarget; setModalOpen(true); }}
+                aria-haspopup="dialog"
+                aria-label="View NŪM Body Tallow details"
+              >
+                <div className="ps-card-media">
+                  <div
+                    className="ps-card-img"
+                    style={{ backgroundImage: 'url("/refined-num-image.png")' }}
+                    aria-hidden="true"
+                  />
+                </div>
+                <div className="ps-card-foot">
+                  <div className="ps-card-name"><span className="num-brand">NŪM</span> BODY TALLOW</div>
+                  <div className="ps-card-price">CAD$ 29.99</div>
+                </div>
+              </button>
+              <button
+                type="button"
+                className={`ps-card-cart${addedFlash === "card" ? " is-added" : ""}`}
+                onClick={() => addToCart(numTallow, "card")}
+                aria-label="Add NŪM Body Tallow to cart"
+              >
+                {addedFlash === "card" ? "Added ✓" : "Add to Cart"}
+              </button>
             </div>
           </div>
         </div>
+      </section>
 
+      <section className="rm-section" aria-labelledby="rm-heading">
+        <div className="rm-inner">
+          <div className="rm-disclosure">This page contains affiliate links.</div>
+          <a
+            className="rm-card"
+            href={RIMAN_URL}
+            target="_blank"
+            rel="noopener noreferrer sponsored"
+            aria-label="Visit Riman Skincare (opens in new tab)"
+          >
+            <div className="rm-media">
+              <div
+                className="rm-img"
+                style={{ backgroundImage: 'url("/riman-preview.jpg")' }}
+                role="img"
+                aria-label="Riman Skincare collection"
+              />
+            </div>
+            <div className="rm-body">
+              <div className="rm-eyebrow">Featured Partner</div>
+              <h3 id="rm-heading" className="rm-heading">Riman Skincare</h3>
+              <p className="rm-text">
+                Korean clinical skincare grounded in research and ritual. Explore the
+                full collection through our partner storefront.
+              </p>
+              <span className="rm-cta">Shop Riman <span aria-hidden="true">→</span></span>
+            </div>
+          </a>
+        </div>
       </section>
 
       <section className="testimonial">
@@ -504,6 +656,217 @@ export default function Home() {
           <div>©2026 Somboun June. All Rights Reserved.</div>
         </div>
       </footer>
+
+      {modalOpen && (
+        <div
+          className="pm-overlay"
+          role="dialog"
+          aria-modal="true"
+          aria-labelledby="pm-title"
+          onClick={(e) => { if (e.target === e.currentTarget) setModalOpen(false); }}
+        >
+          <div
+            ref={modalPanelRef}
+            className="pm-panel"
+            onKeyDown={(e) => {
+              if (e.key === "Escape") { e.stopPropagation(); setModalOpen(false); return; }
+              if (e.key !== "Tab") return;
+              const f = modalPanelRef.current?.querySelectorAll<HTMLElement>(
+                'a[href], button:not([disabled]), [tabindex]:not([tabindex="-1"])'
+              );
+              if (!f || f.length === 0) return;
+              const first = f[0];
+              const last = f[f.length - 1];
+              if (e.shiftKey && document.activeElement === first) {
+                e.preventDefault();
+                last.focus();
+              } else if (!e.shiftKey && document.activeElement === last) {
+                e.preventDefault();
+                first.focus();
+              }
+            }}
+          >
+            <button
+              ref={closeBtnRef}
+              type="button"
+              className="pm-close"
+              aria-label="Close product details"
+              onClick={() => setModalOpen(false)}
+            >
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" aria-hidden="true">
+                <path d="M18 6L6 18M6 6l12 12" />
+              </svg>
+            </button>
+
+            <div className="pm-media">
+              <div className="pm-media-frame">
+                <div
+                  className="pm-media-img"
+                  style={{ backgroundImage: 'url("/refined-num-image.png")' }}
+                  role="img"
+                  aria-label="NŪM Body Tallow"
+                />
+              </div>
+            </div>
+
+            <div className="pm-content">
+              <div className="pm-eyebrow"><span className="num-brand">NŪM</span> BODY TALLOW</div>
+              <h2 id="pm-title" className="pm-title">Body Tallow</h2>
+              <div className="pm-price">$29.99 <span className="pm-price-unit">/ bottle</span></div>
+
+              <button
+                type="button"
+                className={`pm-cart${addedFlash === "modal" ? " is-added" : ""}`}
+                onClick={() => addToCart(numTallow, "modal")}
+                aria-label="Add NŪM Body Tallow to cart"
+              >
+                {addedFlash === "modal" ? (
+                  <>Added to cart <span className="pm-cart-icon" aria-hidden="true">✓</span></>
+                ) : (
+                  <>Add to Cart <span className="pm-cart-icon" aria-hidden="true">→</span></>
+                )}
+              </button>
+
+              <div className="pm-accordion">
+                <div className={`pm-acc-item${openAccordion === "details" ? " is-open" : ""}`}>
+                  <button
+                    type="button"
+                    className="pm-acc-trigger"
+                    aria-expanded={openAccordion === "details"}
+                    aria-controls="pm-acc-details"
+                    onClick={() => setOpenAccordion(openAccordion === "details" ? null : "details")}
+                  >
+                    <span>Details</span>
+                    <span className="pm-acc-icon" aria-hidden="true">{openAccordion === "details" ? "−" : "+"}</span>
+                  </button>
+                  <div id="pm-acc-details" className="pm-acc-body" role="region">
+                    <p>
+                      Grass-fed cattle are the best source for tallow-based skincare because they are
+                      animals that have been pasture-raised, providing a nutrient-rich diet. This results
+                      in tallow with a higher concentration of beneficial compounds, such as omega-3 fatty
+                      acids and antioxidants. These elements contribute to improved skin hydration,
+                      elasticity, and overall skin health.
+                    </p>
+                    <ul className="pm-acc-list">
+                      <li>Pasture-Raised &amp; Grass-Fed</li>
+                      <li>Rich in Omega-3 &amp; Antioxidants</li>
+                      <li>Deep Hydration &amp; Elasticity</li>
+                      <li>100% Biocompatible</li>
+                    </ul>
+                  </div>
+                </div>
+
+                <div className={`pm-acc-item${openAccordion === "ingredients" ? " is-open" : ""}`}>
+                  <button
+                    type="button"
+                    className="pm-acc-trigger"
+                    aria-expanded={openAccordion === "ingredients"}
+                    aria-controls="pm-acc-ingredients"
+                    onClick={() => setOpenAccordion(openAccordion === "ingredients" ? null : "ingredients")}
+                  >
+                    <span>Ingredients</span>
+                    <span className="pm-acc-icon" aria-hidden="true">{openAccordion === "ingredients" ? "−" : "+"}</span>
+                  </button>
+                  <div id="pm-acc-ingredients" className="pm-acc-body" role="region">
+                    <div className="pm-ing-head">
+                      <div className="pm-ing-title">The Formula</div>
+                      <div className="pm-ing-sub">Pure &amp; Organic Composition</div>
+                    </div>
+                    <dl className="pm-ing-list">
+                      <div><dt>Grass Fed Beef Tallow</dt><dd>Pasture-Raised Base</dd></div>
+                      <div><dt>Raspberry Seed Oil</dt><dd>Organic Rubus Idaeus</dd></div>
+                      <div><dt>Carrot Seed Oil</dt><dd>Organic Daucus Carota Sativa</dd></div>
+                      <div><dt>Frankincense</dt><dd>Organic Boswellia</dd></div>
+                      <div><dt>Calendula</dt><dd>Organic Calendula Officinalis</dd></div>
+                      <div><dt>Lavender Oil</dt><dd>Organic Lavender Angustifolia</dd></div>
+                      <div><dt>Immortelle Oil</dt><dd>Therapeutic Helichrysum Italicum</dd></div>
+                    </dl>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {cartOpen && (
+        <>
+          <div className="cart-backdrop" onClick={() => setCartOpen(false)} aria-hidden="true" />
+          <aside className="cart-drawer" role="dialog" aria-modal="true" aria-label="Shopping cart">
+            <header className="cart-header">
+              <h2 className="cart-title">
+                Cart
+                {cartCount > 0 && <span className="cart-title-count">{cartCount} {cartCount === 1 ? "item" : "items"}</span>}
+              </h2>
+              <button
+                ref={cartCloseRef}
+                type="button"
+                className="cart-close"
+                aria-label="Close cart"
+                onClick={() => setCartOpen(false)}
+              >
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" aria-hidden="true">
+                  <path d="M18 6L6 18M6 6l12 12" />
+                </svg>
+              </button>
+            </header>
+
+            <div className="cart-items">
+              {cartItems.length === 0 ? (
+                <div className="cart-empty">
+                  <div className="cart-empty-title">Your cart is empty</div>
+                  <div className="cart-empty-text">
+                    Add a product to begin. Orders are confirmed by email.
+                  </div>
+                </div>
+              ) : (
+                cartItems.map((item) => (
+                  <div key={item.id} className="cart-item">
+                    <div
+                      className="cart-item-thumb"
+                      style={{ backgroundImage: `url("${item.image}")` }}
+                      role="img"
+                      aria-label={item.name}
+                    />
+                    <div className="cart-item-info">
+                      <div className="cart-item-name">{item.name}</div>
+                      <div className="cart-item-price">${item.price.toFixed(2)}</div>
+                      <div className="cart-qty" role="group" aria-label={`Quantity for ${item.name}`}>
+                        <button type="button" aria-label="Decrease quantity" onClick={() => updateQty(item.id, -1)}>−</button>
+                        <span className="cart-qty-value" aria-live="polite">{item.quantity}</span>
+                        <button type="button" aria-label="Increase quantity" onClick={() => updateQty(item.id, 1)}>+</button>
+                      </div>
+                    </div>
+                    <button
+                      type="button"
+                      className="cart-item-remove"
+                      aria-label={`Remove ${item.name} from cart`}
+                      onClick={() => removeFromCart(item.id)}
+                    >
+                      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" aria-hidden="true">
+                        <path d="M18 6L6 18M6 6l12 12" />
+                      </svg>
+                    </button>
+                  </div>
+                ))
+              )}
+            </div>
+
+            {cartItems.length > 0 && (
+              <footer className="cart-footer">
+                <div className="cart-subtotal">
+                  <span className="cart-subtotal-label">Subtotal</span>
+                  <span className="cart-subtotal-value">${cartSubtotal.toFixed(2)} CAD</span>
+                </div>
+                <div className="cart-note">Shipping and taxes calculated at checkout.</div>
+                <button type="button" className="cart-checkout" onClick={handleCheckout}>
+                  Checkout
+                </button>
+              </footer>
+            )}
+          </aside>
+        </>
+      )}
     </>
   );
 }
