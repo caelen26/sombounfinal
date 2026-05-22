@@ -603,12 +603,16 @@ button { font: inherit; color: inherit; background: none; border: 0; cursor: poi
 /* ===========================================================
    SECTION E — TESTIMONIALS
    =========================================================== */
-.testimonial { padding: clamp(96px, 12vw, 192px) var(--pad-x) 72px; }
+.testimonial {
+  padding: clamp(96px, 12vw, 192px) var(--pad-x) 72px;
+  background: var(--sage);
+  color: #fff;
+}
 .t-eyebrow {
   text-align: center;
   font-size: 12px;
   letter-spacing: .22em;
-  color: var(--sage-deep);
+  color: rgba(255,255,255,.78);
   margin-bottom: 38px;
 }
 .quote-slider {
@@ -630,8 +634,9 @@ button { font: inherit; color: inherit; background: none; border: 0; cursor: poi
   padding: 0 8%;
   letter-spacing: -.01em;
 }
+.quote { color: rgba(255,255,255,.9); }
 .quote .mark {
-  color: var(--sage);
+  color: rgba(255,255,255,.55);
   margin: 0 .12em;
   font-size: 1.05em;
   line-height: 0;
@@ -647,13 +652,13 @@ button { font: inherit; color: inherit; background: none; border: 0; cursor: poi
 .t-meta .prev, .t-meta .next {
   display: flex; align-items: center; gap: 14px;
   font-size: 13px; letter-spacing: .22em;
-  color: var(--muted);
+  color: rgba(255,255,255,.6);
   font-family: var(--sans);
   cursor: pointer;
   background: none; border: none; padding: 0;
   transition: color .25s;
 }
-.t-meta .prev:hover, .t-meta .next:hover { color: var(--ink); }
+.t-meta .prev:hover, .t-meta .next:hover { color: #fff; }
 .t-meta .next { justify-self: end; }
 .t-author {
   display: flex; flex-direction: column; align-items: center; gap: 12px;
@@ -1087,7 +1092,7 @@ button { font: inherit; color: inherit; background: none; border: 0; cursor: poi
   .sage-body { max-width: 100%; }
 
   /* ── Testimonials ── */
-  .testimonial { padding: 72px var(--pad-x) 48px; }
+  .testimonial { padding: 72px var(--pad-x) 48px; background: var(--sage); }
   .quote { padding: 0 2%; }
   .t-meta { margin-top: 44px; }
   .filmstrip {
@@ -2167,3 +2172,112 @@ button { font: inherit; color: inherit; background: none; border: 0; cursor: poi
   z-index: 1;
 }
 
+/* ===========================================================
+   PRIVACY POLICY PAGE
+   =========================================================== */
+.pp-page {
+  background: var(--cream);
+  min-height: 100vh;
+  padding: clamp(80px, 10vw, 140px) var(--pad-x) clamp(80px, 10vw, 120px);
+}
+.pp-inner {
+  max-width: 740px;
+  margin: 0 auto;
+}
+.pp-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 48px;
+  flex-wrap: wrap;
+  gap: 12px;
+}
+.pp-back {
+  font-family: var(--sans);
+  font-size: 12px;
+  font-weight: 500;
+  letter-spacing: .18em;
+  text-transform: uppercase;
+  color: var(--sage-deep);
+  text-decoration: none;
+  transition: color .2s ease;
+}
+.pp-back:hover { color: var(--ink); }
+.pp-updated {
+  font-family: var(--sans);
+  font-size: 12px;
+  letter-spacing: .08em;
+  color: var(--muted);
+  margin: 0;
+}
+.pp-title {
+  font-family: var(--serif);
+  font-weight: 300;
+  font-size: clamp(42px, 6vw, 72px);
+  line-height: 1;
+  letter-spacing: -.02em;
+  color: var(--ink);
+  margin: 0 0 32px;
+}
+.pp-intro {
+  font-size: 16px;
+  line-height: 1.75;
+  color: var(--ink-soft);
+  margin: 0 0 56px;
+  border-left: 3px solid var(--sage);
+  padding-left: 24px;
+}
+.pp-section {
+  margin-bottom: 44px;
+  padding-bottom: 44px;
+  border-bottom: 1px solid var(--line);
+}
+.pp-section:last-child {
+  border-bottom: none;
+  margin-bottom: 0;
+  padding-bottom: 0;
+}
+.pp-section h2 {
+  font-family: var(--serif);
+  font-weight: 400;
+  font-size: clamp(20px, 2.2vw, 26px);
+  letter-spacing: -.01em;
+  color: var(--ink);
+  margin: 0 0 16px;
+}
+.pp-section p,
+.pp-section address {
+  font-size: 15px;
+  line-height: 1.75;
+  color: var(--ink-soft);
+  margin: 0 0 14px;
+  font-style: normal;
+}
+.pp-section p:last-child { margin-bottom: 0; }
+.pp-section ul {
+  margin: 0 0 16px 0;
+  padding-left: 24px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+.pp-section ul li {
+  font-size: 15px;
+  line-height: 1.65;
+  color: var(--ink-soft);
+}
+.pp-link {
+  color: var(--sage-deep);
+  text-decoration: underline;
+  text-underline-offset: 3px;
+  transition: color .2s ease;
+}
+.pp-link:hover { color: var(--ink); }
+.pp-address {
+  font-size: 15px;
+  line-height: 1.75;
+  color: var(--ink-soft);
+}
+@media (max-width: 768px) {
+  .pp-header { flex-direction: column; align-items: flex-start; }
+}
