@@ -2,7 +2,11 @@
 
 import { useEffect, useRef, useState } from "react";
 
-const RIMAN_URL = "https://mall.riman.com/member-ship/home?referrerCode=4007357701&utm_source=ig&utm_medium=social&utm_content=link_in_bio&fbclid=PAZXh0bgNhZW0CMTEAc3J0YwZhcHBfaWQPOTM2NjE5NzQzMzkyNDU5AAGnSzlvjf0O5Yyn99fFymE0Aky-MiXIB-0PzUTIDENClmui_dqi2nUpcTGlGEc_aem_a7CJKao6iWR6PtZ_yXHYNw";
+const RIMAN_URL =
+  "https://mall.riman.com/member-ship/home?referrerCode=4007357701&utm_source=ig&utm_medium=social&utm_content=link_in_bio&fbclid=PAZXh0bgNhZW0CMTEAc3J0YwZhcHBfaWQPOTM2NjE5NzQzMzkyNDU5AAGnSzlvjf0O5Yyn99fFymE0Aky-MiXIB-0PzUTIDENClmui_dqi2nUpcTGlGEc_aem_a7CJKao6iWR6PtZ_yXHYNw";
+
+// Cal.com booking URL — opens inside the booking modal as an embedded iframe.
+const CAL_BOOKING_URL = "https://cal.com/caelen-yung26/website-meeting";
 
 const reviews = [
   {
@@ -59,25 +63,53 @@ export default function Home() {
   const [cfSubmitted, setCfSubmitted] = useState(false);
   const [menuOpen, setMenuOpen] = useState(false);
 
+  // Product catalog. `image` is the primary (used for cart thumbnails);
+  // `images` is the carousel sequence shown in cards + modal.
+  type Product = { id: string; name: string; price: number; image: string; images: string[] };
+  const numBodyTallow: Product = {
+    id: "num-body-tallow",
+    name: "NŪM Body Tallow",
+    price: 29.99,
+    image: "/refined-num-image.png",
+    images: ["/refined-num-image.png", "/image-2.png"],
+  };
+  const numFaceTallow: Product = {
+    id: "num-face-tallow",
+    name: "NŪM Face Tallow",
+    price: 29.99,
+    image: "/skintallow.png",
+    images: ["/skintallow.png", "/image-2.png"],
+  };
+
   // Product modal state + refs
-  const [modalOpen, setModalOpen] = useState(false);
+  const [modalProduct, setModalProduct] = useState<Product | null>(null);
+  const modalOpen = modalProduct !== null;
   const [openAccordion, setOpenAccordion] = useState<"details" | "ingredients" | null>("details");
+  // Carousel indices — modal only (card sliders removed per design update)
+  const [modalImageIdx, setModalImageIdx] = useState(0);
   const lastFocusedRef = useRef<HTMLElement | null>(null);
   const closeBtnRef = useRef<HTMLButtonElement | null>(null);
   const modalPanelRef = useRef<HTMLDivElement | null>(null);
 
   // Cart state
-  type CartItem = { id: string; name: string; price: number; image: string; quantity: number };
+  type CartItem = Product & { quantity: number };
   const [cartItems, setCartItems] = useState<CartItem[]>([]);
   const [cartOpen, setCartOpen] = useState(false);
-  const [addedFlash, setAddedFlash] = useState<"card" | "modal" | null>(null);
+  // Key format: `${source}:${productId}` — lets us flash the right button
+  // when there are multiple cards/products on the page.
+  const [addedFlashKey, setAddedFlashKey] = useState<string | null>(null);
   const cartCloseRef = useRef<HTMLButtonElement | null>(null);
   const cartTriggerRef = useRef<HTMLElement | null>(null);
+
+  // Booking modal state + refs (Cal.com embed)
+  const [bookingOpen, setBookingOpen] = useState(false);
+  const bookingCloseRef = useRef<HTMLButtonElement | null>(null);
+  const bookingTriggerRef = useRef<HTMLElement | null>(null);
 
   const cartCount = cartItems.reduce((n, i) => n + i.quantity, 0);
   const cartSubtotal = cartItems.reduce((s, i) => s + i.price * i.quantity, 0);
 
-  const addToCart = (item: Omit<CartItem, "quantity">, source: "card" | "modal") => {
+  const addToCart = (item: Product, source: "card" | "modal") => {
     setCartItems((prev) => {
       const existing = prev.find((i) => i.id === item.id);
       if (existing) {
@@ -85,9 +117,14 @@ export default function Home() {
       }
       return [...prev, { ...item, quantity: 1 }];
     });
-    setAddedFlash(source);
-    window.setTimeout(() => setAddedFlash(null), 1200);
+    setAddedFlashKey(`${source}:${item.id}`);
+    window.setTimeout(() => setAddedFlashKey(null), 1200);
   };
+  const openProductModal = (product: Product, triggerEl: HTMLElement) => {
+    lastFocusedRef.current = triggerEl;
+    setModalProduct(product);
+  };
+  const closeProductModal = () => setModalProduct(null);
   const updateQty = (id: string, delta: number) => {
     setCartItems((prev) =>
       prev
@@ -107,13 +144,6 @@ export default function Home() {
     window.location.href = `mailto:sombounp@gmail.com?subject=${subject}&body=${body}`;
   };
 
-  const numTallow = {
-    id: "num-body-tallow",
-    name: "NŪM Body Tallow",
-    price: 29.99,
-    image: "/refined-num-image.png",
-  };
-
   const handleContactSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     setCfSubmitted(true);
@@ -131,7 +161,7 @@ export default function Home() {
     const prev = document.body.style.overflow;
     document.body.style.overflow = "hidden";
     const id = requestAnimationFrame(() => closeBtnRef.current?.focus());
-    const onKey = (e: KeyboardEvent) => { if (e.key === "Escape") setModalOpen(false); };
+    const onKey = (e: KeyboardEvent) => { if (e.key === "Escape") closeProductModal(); };
     window.addEventListener("keydown", onKey);
     return () => {
       document.body.style.overflow = prev;
@@ -141,8 +171,13 @@ export default function Home() {
     };
   }, [modalOpen]);
 
-  // Auto-open Details every time the modal opens
-  useEffect(() => { if (modalOpen) setOpenAccordion("details"); }, [modalOpen]);
+  // Auto-open Details + reset carousel to first image whenever the modal opens
+  useEffect(() => {
+    if (modalOpen) {
+      setOpenAccordion("details");
+      setModalImageIdx(0);
+    }
+  }, [modalOpen]);
 
   // Lock body scroll + manage focus when cart drawer is open
   useEffect(() => {
@@ -159,6 +194,22 @@ export default function Home() {
       cartTriggerRef.current?.focus();
     };
   }, [cartOpen]);
+
+  // Lock body scroll + manage focus when booking modal is open
+  useEffect(() => {
+    if (!bookingOpen) return;
+    const prev = document.body.style.overflow;
+    document.body.style.overflow = "hidden";
+    const id = requestAnimationFrame(() => bookingCloseRef.current?.focus());
+    const onKey = (e: KeyboardEvent) => { if (e.key === "Escape") setBookingOpen(false); };
+    window.addEventListener("keydown", onKey);
+    return () => {
+      document.body.style.overflow = prev;
+      window.removeEventListener("keydown", onKey);
+      cancelAnimationFrame(id);
+      bookingTriggerRef.current?.focus();
+    };
+  }, [bookingOpen]);
 
   const goNext = () => setVIdx((i) => i + 1);
   const goPrev = () => setVIdx((i) => i - 1);
@@ -433,9 +484,22 @@ export default function Home() {
             </div>
 
           </div>
+
+          <div className="tx-cta">
+            <button
+              type="button"
+              className="book-cta"
+              onClick={(e) => { bookingTriggerRef.current = e.currentTarget; setBookingOpen(true); }}
+              aria-haspopup="dialog"
+              aria-label="Open booking calendar"
+            >
+              Book Now <span className="book-cta-icon" aria-hidden="true">→</span>
+            </button>
+          </div>
         </div>
       </section>
 
+      {/* ── NŪM Product Showcase ── */}
       <section id="num" className="ps-section sage-section">
         <div className="ps-inner">
           <div className="ps-intro">
@@ -447,39 +511,59 @@ export default function Home() {
             </p>
           </div>
           <div className="ps-grid">
-            <div className="ps-card">
-              <button
-                type="button"
-                className="ps-card-trigger"
-                onClick={(e) => { lastFocusedRef.current = e.currentTarget; setModalOpen(true); }}
-                aria-haspopup="dialog"
-                aria-label="View NŪM Body Tallow details"
-              >
-                <div className="ps-card-media">
-                  <div
-                    className="ps-card-img"
-                    style={{ backgroundImage: 'url("/refined-num-image.png")' }}
-                    aria-hidden="true"
-                  />
+            {[numBodyTallow, numFaceTallow].map((product) => {
+              const label = product.name.replace(/^NŪM\s*/, "").toUpperCase();
+              const cardKey = `card:${product.id}`;
+              // Card always shows the primary image — sliders removed from grid
+              return (
+                <div key={product.id} className="ps-card">
+                  <div className="ps-card-media">
+                    <div
+                      className="ps-card-img"
+                      style={{
+                        backgroundImage: `url("${product.image}")`,
+                        // Nudge Face Tallow a touch more centred
+                        backgroundPosition: product.id === "num-face-tallow" ? "center 40%" : "center",
+                      }}
+                      aria-hidden="true"
+                    />
+                    {/* Transparent click overlay to open modal */}
+                    <button
+                      type="button"
+                      className="ps-card-img-link"
+                      onClick={(e) => openProductModal(product, e.currentTarget)}
+                      aria-haspopup="dialog"
+                      aria-label={`View ${product.name} details`}
+                    />
+                  </div>
+                  <button
+                    type="button"
+                    className="ps-card-trigger"
+                    onClick={(e) => openProductModal(product, e.currentTarget)}
+                    aria-haspopup="dialog"
+                    aria-label={`View ${product.name} details`}
+                  >
+                    <div className="ps-card-foot">
+                      <div className="ps-card-name"><strong className="num-brand">NŪM</strong> {label}</div>
+                      <div className="ps-card-price">CAD$ {product.price.toFixed(2)}</div>
+                    </div>
+                  </button>
+                  <button
+                    type="button"
+                    className={`ps-card-cart${addedFlashKey === cardKey ? " is-added" : ""}`}
+                    onClick={() => addToCart(product, "card")}
+                    aria-label={`Add ${product.name} to cart`}
+                  >
+                    {addedFlashKey === cardKey ? "Added ✓" : "Add to Cart"}
+                  </button>
                 </div>
-                <div className="ps-card-foot">
-                  <div className="ps-card-name"><span className="num-brand">NŪM</span> BODY TALLOW</div>
-                  <div className="ps-card-price">CAD$ 29.99</div>
-                </div>
-              </button>
-              <button
-                type="button"
-                className={`ps-card-cart${addedFlash === "card" ? " is-added" : ""}`}
-                onClick={() => addToCart(numTallow, "card")}
-                aria-label="Add NŪM Body Tallow to cart"
-              >
-                {addedFlash === "card" ? "Added ✓" : "Add to Cart"}
-              </button>
-            </div>
+              );
+            })}
           </div>
         </div>
       </section>
 
+      {/* ── Riman Affiliate ── */}
       <section className="rm-section" aria-labelledby="rm-heading">
         <div className="rm-inner">
           <div className="rm-disclosure">This page contains affiliate links.</div>
@@ -493,7 +577,7 @@ export default function Home() {
             <div className="rm-media">
               <div
                 className="rm-img"
-                style={{ backgroundImage: 'url("/riman-preview.jpg")' }}
+                style={{ backgroundImage: 'url("/riman.webp")' }}
                 role="img"
                 aria-label="Riman Skincare collection"
               />
@@ -654,22 +738,24 @@ export default function Home() {
 
         <div className="subfoot">
           <div>©2026 Somboun June. All Rights Reserved.</div>
+          <a className="subfoot-link" href="/privacy-policy">Privacy Policy</a>
         </div>
       </footer>
 
-      {modalOpen && (
+      {/* ── Product Detail Modal ── */}
+      {modalProduct && (
         <div
           className="pm-overlay"
           role="dialog"
           aria-modal="true"
           aria-labelledby="pm-title"
-          onClick={(e) => { if (e.target === e.currentTarget) setModalOpen(false); }}
+          onClick={(e) => { if (e.target === e.currentTarget) closeProductModal(); }}
         >
           <div
             ref={modalPanelRef}
             className="pm-panel"
             onKeyDown={(e) => {
-              if (e.key === "Escape") { e.stopPropagation(); setModalOpen(false); return; }
+              if (e.key === "Escape") { e.stopPropagation(); closeProductModal(); return; }
               if (e.key !== "Tab") return;
               const f = modalPanelRef.current?.querySelectorAll<HTMLElement>(
                 'a[href], button:not([disabled]), [tabindex]:not([tabindex="-1"])'
@@ -691,36 +777,82 @@ export default function Home() {
               type="button"
               className="pm-close"
               aria-label="Close product details"
-              onClick={() => setModalOpen(false)}
+              onClick={closeProductModal}
             >
               <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" aria-hidden="true">
                 <path d="M18 6L6 18M6 6l12 12" />
               </svg>
             </button>
 
+            {/* Left: image carousel */}
             <div className="pm-media">
               <div className="pm-media-frame">
                 <div
                   className="pm-media-img"
-                  style={{ backgroundImage: 'url("/refined-num-image.png")' }}
+                  style={{ backgroundImage: `url("${modalProduct.images[modalImageIdx] ?? modalProduct.image}")` }}
                   role="img"
-                  aria-label="NŪM Body Tallow"
+                  aria-label={modalProduct.name}
                 />
               </div>
+              {/* Dots + arrow navigation — only shown when multiple images exist */}
+              {modalProduct.images.length > 1 && (
+                <div className="pm-nav-row">
+                  <div className="pm-dots" role="group" aria-label="Product image carousel">
+                    {modalProduct.images.map((_, i) => (
+                      <button
+                        key={i}
+                        type="button"
+                        className={`pm-dot${i === modalImageIdx ? " is-active" : ""}`}
+                        aria-label={`Show image ${i + 1}`}
+                        aria-current={i === modalImageIdx}
+                        onClick={() => setModalImageIdx(i)}
+                      />
+                    ))}
+                  </div>
+                  {/* Arrow buttons — white circles on the right */}
+                  <div className="pm-arrows" aria-label="Image navigation">
+                    <button
+                      type="button"
+                      className="pm-arrow"
+                      aria-label="Previous image"
+                      onClick={() =>
+                        setModalImageIdx((i) => (i - 1 + modalProduct.images.length) % modalProduct.images.length)
+                      }
+                    >
+                      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+                        <path d="M15 18l-6-6 6-6" />
+                      </svg>
+                    </button>
+                    <button
+                      type="button"
+                      className="pm-arrow"
+                      aria-label="Next image"
+                      onClick={() =>
+                        setModalImageIdx((i) => (i + 1) % modalProduct.images.length)
+                      }
+                    >
+                      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+                        <path d="M9 18l6-6-6-6" />
+                      </svg>
+                    </button>
+                  </div>
+                </div>
+              )}
             </div>
 
+            {/* Right: product info */}
             <div className="pm-content">
-              <div className="pm-eyebrow"><span className="num-brand">NŪM</span> BODY TALLOW</div>
-              <h2 id="pm-title" className="pm-title">Body Tallow</h2>
+              <div className="pm-eyebrow"><span className="num-brand">NŪM</span> {modalProduct.name.replace(/^NŪM\s*/, "").toUpperCase()}</div>
+              <h2 id="pm-title" className="pm-title">{modalProduct.name.replace(/^NŪM\s*/, "")}</h2>
               <div className="pm-price">$29.99 <span className="pm-price-unit">/ bottle</span></div>
 
               <button
                 type="button"
-                className={`pm-cart${addedFlash === "modal" ? " is-added" : ""}`}
-                onClick={() => addToCart(numTallow, "modal")}
-                aria-label="Add NŪM Body Tallow to cart"
+                className={`pm-cart${addedFlashKey === `modal:${modalProduct.id}` ? " is-added" : ""}`}
+                onClick={() => addToCart(modalProduct, "modal")}
+                aria-label={`Add ${modalProduct.name} to cart`}
               >
-                {addedFlash === "modal" ? (
+                {addedFlashKey === `modal:${modalProduct.id}` ? (
                   <>Added to cart <span className="pm-cart-icon" aria-hidden="true">✓</span></>
                 ) : (
                   <>Add to Cart <span className="pm-cart-icon" aria-hidden="true">→</span></>
@@ -789,6 +921,7 @@ export default function Home() {
         </div>
       )}
 
+      {/* ── Cart Drawer ── */}
       {cartOpen && (
         <>
           <div className="cart-backdrop" onClick={() => setCartOpen(false)} aria-hidden="true" />
@@ -865,6 +998,32 @@ export default function Home() {
               </footer>
             )}
           </aside>
+        </>
+      )}
+
+      {/* ── Booking Modal (Cal.com embed) ── */}
+      {bookingOpen && (
+        <>
+          <div className="bk-backdrop" onClick={() => setBookingOpen(false)} aria-hidden="true" />
+          <div className="bk-modal" role="dialog" aria-modal="true" aria-label="Book a consultation">
+            <button
+              ref={bookingCloseRef}
+              type="button"
+              className="bk-close"
+              aria-label="Close booking"
+              onClick={() => setBookingOpen(false)}
+            >
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" aria-hidden="true">
+                <path d="M18 6L6 18M6 6l12 12" />
+              </svg>
+            </button>
+            <iframe
+              src={CAL_BOOKING_URL}
+              className="bk-iframe"
+              title="Book a consultation"
+              loading="lazy"
+            />
+          </div>
         </>
       )}
     </>
