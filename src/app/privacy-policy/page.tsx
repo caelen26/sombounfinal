@@ -118,12 +118,6 @@ export default function PrivacyPolicy() {
             <li>Request correction of inaccurate or incomplete information</li>
             <li>Withdraw your consent for data processing (subject to legal or contractual restrictions)</li>
           </ul>
-          <p>
-            To exercise these rights, please contact us. If you feel your privacy rights have been violated, you have the right to file a complaint with the{" "}
-            <a href="https://www.priv.gc.ca/en/report-a-concern/" target="_blank" rel="noopener noreferrer" className="pp-link">
-              Office of the Privacy Commissioner of Canada
-            </a>.
-          </p>
         </section>
 
         <section className="pp-section">
@@ -168,6 +162,12 @@ export default function PrivacyPolicy() {
             </a>
           </address>
         </section>
+
+        <div className="pp-footer">
+          <Link href="/" className="pp-back-btn">
+            Back to Somboun June
+          </Link>
+        </div>
       </div>
     </main>
   );

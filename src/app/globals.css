@@ -2281,3 +2281,33 @@ button { font: inherit; color: inherit; background: none; border: 0; cursor: poi
 @media (max-width: 768px) {
   .pp-header { flex-direction: column; align-items: flex-start; }
 }
+
+.pp-footer {
+  margin-top: 56px;
+  padding-top: 40px;
+  border-top: 1px solid var(--line);
+  display: flex;
+  justify-content: center;
+}
+.pp-back-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 16px 32px;
+  background: var(--ink);
+  color: var(--cream);
+  font-family: var(--sans);
+  font-size: 12px;
+  font-weight: 500;
+  letter-spacing: .18em;
+  text-transform: uppercase;
+  text-decoration: none;
+  border-radius: 999px;
+  transition: background .25s ease, transform .2s ease;
+}
+.pp-back-btn:hover { background: var(--sage-deep); }
+.pp-back-btn:active { transform: scale(.98); }
+.pp-back-btn:focus-visible {
+  outline: none;
+  box-shadow: 0 0 0 2px var(--cream), 0 0 0 4px var(--sage-deep);
+}
