@@ -30,18 +30,14 @@ export default function PrivacyPolicy() {
         <section className="pp-section">
           <h2>1. Information We Collect</h2>
           <p>
-            We may collect personal information that you voluntarily provide to us when you:
+            We may collect personal information that you voluntarily provide to us when you interact with our website:
           </p>
           <ul>
-            <li>Submit our contact or consultation request form (name, email, phone number, message)</li>
-            <li>Place a product order via email (name, shipping address, order details)</li>
-            <li>Subscribe to any future communications from us</li>
+            <li><strong>Contact Form:</strong> Name, email address, phone number, and message contents.</li>
+            <li><strong>Consultation Bookings (Cal.com):</strong> Appointment details, name, and contact information.</li>
+            <li><strong>Shopping Cart:</strong> Order details, including items added to your cart and abandoned cart data.</li>
+            <li><strong>Technical Data:</strong> Browser type, IP address, device information, and pages visited, collected automatically via Google Analytics and Vercel Analytics.</li>
           </ul>
-          <p>
-            We may also automatically collect certain non-personal information when you visit our
-            site, including browser type, IP address, pages visited, and referring URLs, through
-            standard web server logs or analytics tools.
-          </p>
         </section>
 
         <section className="pp-section">
@@ -49,77 +45,107 @@ export default function PrivacyPolicy() {
           <p>We use the information we collect to:</p>
           <ul>
             <li>Respond to your inquiries and consultation requests</li>
-            <li>Process and fulfil product orders</li>
+            <li>Process and fulfill product orders and bookings</li>
+            <li>Analyze website performance and user behavior to improve our services</li>
             <li>Send you order confirmations and follow-up communications</li>
-            <li>Improve our website and services</li>
-            <li>Comply with applicable legal obligations</li>
+            <li>Comply with applicable legal and regulatory obligations</li>
           </ul>
-          <p>
-            We do not sell, trade, or otherwise transfer your personal information to third parties
-            for marketing purposes.
-          </p>
         </section>
 
         <section className="pp-section">
-          <h2>3. Affiliate Links</h2>
+          <h2>3. Third-Party Services</h2>
           <p>
-            This website contains affiliate links, including links to Riman Skincare. If you click
-            an affiliate link and make a purchase, we may earn a commission at no additional cost
-            to you. We only recommend products we genuinely believe in.
+            We utilize trusted third-party services to operate our website and business. These providers have their own privacy policies governing the use of your information:
           </p>
+          <ul>
+            <li>
+              <strong>Cal.com</strong> (Booking): <a href="https://cal.com/privacy" target="_blank" rel="noopener noreferrer" className="pp-link">Privacy Policy</a>
+            </li>
+            <li>
+              <strong>Google Analytics</strong> (Analytics): <a href="https://policies.google.com/privacy" target="_blank" rel="noopener noreferrer" className="pp-link">Privacy Policy</a>
+            </li>
+            <li>
+              <strong>Vercel Analytics</strong> (Hosting & Analytics): <a href="https://vercel.com/legal/privacy-policy" target="_blank" rel="noopener noreferrer" className="pp-link">Privacy Policy</a>
+            </li>
+            <li>
+              <strong>Riman Skincare</strong> (Affiliate Partner): <a href="https://riman.com/privacy-policy" target="_blank" rel="noopener noreferrer" className="pp-link">Privacy Policy</a>
+            </li>
+          </ul>
         </section>
 
         <section className="pp-section">
-          <h2>4. Cookies &amp; Tracking</h2>
+          <h2>4. Cookies and Tracking</h2>
           <p>
-            Our website may use cookies and similar tracking technologies to enhance your browsing
-            experience and analyse site traffic. You can instruct your browser to refuse all
+            Our website uses cookies and similar tracking technologies to enhance your browsing
+            experience, remember cart contents, and analyze site traffic. You can instruct your browser to refuse all
             cookies or to indicate when a cookie is being sent. Note that some features of the
             site may not function properly without cookies.
           </p>
         </section>
 
         <section className="pp-section">
-          <h2>5. Third-Party Services</h2>
+          <h2>5. Marketing Communications</h2>
           <p>
-            We may use third-party services such as Cal.com for appointment booking and standard
-            email providers for communication. These services have their own privacy policies
-            governing the use of your information.
+            With your consent, we may send you marketing emails about new products, services, or updates. 
+            You can opt-out of these communications at any time by clicking the &ldquo;unsubscribe&rdquo; 
+            link provided in the emails or by contacting us directly.
           </p>
         </section>
 
         <section className="pp-section">
-          <h2>6. Data Security</h2>
+          <h2>6. Data Retention</h2>
+          <p>
+            We retain your personal information only for as long as necessary to fulfill the purposes outlined in this Privacy Policy. 
+            Specifically, we keep tax, order, and booking records for up to 7 years to comply with Canadian legal and accounting requirements.
+          </p>
+        </section>
+
+        <section className="pp-section">
+          <h2>7. Sharing of Information</h2>
+          <p>
+            We value your privacy. <strong>We do not sell your personal information</strong> to third parties for marketing purposes. 
+            Information is only shared with the trusted third-party service providers listed above as necessary to operate our business.
+          </p>
+        </section>
+
+        <section className="pp-section">
+          <h2>8. Your Rights Under PIPEDA</h2>
+          <p>
+            In accordance with the Personal Information Protection and Electronic Documents Act (PIPEDA), you have the right to:
+          </p>
+          <ul>
+            <li>Request access to the personal information we hold about you</li>
+            <li>Request correction of inaccurate or incomplete information</li>
+            <li>Withdraw your consent for data processing (subject to legal or contractual restrictions)</li>
+          </ul>
+          <p>
+            To exercise these rights, please contact us. If you feel your privacy rights have been violated, you have the right to file a complaint with the{" "}
+            <a href="https://www.priv.gc.ca/en/report-a-concern/" target="_blank" rel="noopener noreferrer" className="pp-link">
+              Office of the Privacy Commissioner of Canada
+            </a>.
+          </p>
+        </section>
+
+        <section className="pp-section">
+          <h2>9. Security</h2>
           <p>
             We implement reasonable administrative and technical measures to protect your personal
-            information. However, no method of transmission over the Internet or electronic
+            information from unauthorized access, loss, or misuse. However, no method of transmission over the Internet or electronic
             storage is 100% secure, and we cannot guarantee absolute security.
           </p>
         </section>
 
         <section className="pp-section">
-          <h2>7. Your Rights</h2>
+          <h2>10. Children&apos;s Privacy</h2>
           <p>
-            You have the right to request access to, correction of, or deletion of the personal
-            information we hold about you. To exercise these rights, please contact us at{" "}
-            <a href="mailto:sombounp@gmail.com" className="pp-link">
-              sombounp@gmail.com
-            </a>
-            .
-          </p>
-        </section>
-
-        <section className="pp-section">
-          <h2>8. Children&apos;s Privacy</h2>
-          <p>
-            Our website is not directed at children under the age of 13. We do not knowingly
+            Our website is not directed at children under the age of 18. We do not knowingly
             collect personal information from children. If you believe we have inadvertently
-            collected such information, please contact us immediately.
+            collected such information, please contact us immediately so we can delete it.
           </p>
         </section>
 
         <section className="pp-section">
-          <h2>9. Changes to This Policy</h2>
+          <h2>11. Changes to This Policy</h2>
           <p>
             We may update this Privacy Policy from time to time. We will notify you of any
             significant changes by updating the &ldquo;Last updated&rdquo; date at the top of
@@ -128,7 +154,7 @@ export default function PrivacyPolicy() {
         </section>
 
         <section className="pp-section">
-          <h2>10. Contact Us</h2>
+          <h2>12. Contact Us</h2>
           <p>
             If you have any questions or concerns about this Privacy Policy, please contact us:
           </p>
