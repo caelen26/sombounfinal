@@ -171,22 +171,10 @@ export default function Home() {
           <a href="#contact">Contact</a>
         </nav>
         <div className="icon-row">
-          <button className="icon-btn" aria-label="Search">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round">
-              <circle cx="11" cy="11" r="7" />
-              <path d="m20 20-3.5-3.5" />
-            </svg>
-          </button>
           <button className="icon-btn" aria-label="Cart">
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round">
               <path d="M5 8h14l-1.2 11.2A2 2 0 0 1 15.8 21H8.2a2 2 0 0 1-2-1.8L5 8Z" />
               <path d="M9 8V6a3 3 0 0 1 6 0v2" />
-            </svg>
-          </button>
-          <button className="icon-btn" aria-label="Account">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round">
-              <circle cx="12" cy="9" r="3.5" />
-              <path d="M5 20c1-3.6 4-5.5 7-5.5s6 1.9 7 5.5" />
             </svg>
           </button>
         </div>
