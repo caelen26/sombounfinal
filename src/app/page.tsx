@@ -308,7 +308,7 @@ export default function Home() {
       <header className="header">
         <div className="logo">Somboun June</div>
         <nav className="nav" aria-label="primary">
-          <a href="#journey">The Journey</a>
+          <a href="/shop">Shop All</a>
           <a href="#num">NŪM</a>
           <a href="#laser">Laser Skin Care</a>
           <a href={RIMAN_URL} target="_blank" rel="noopener noreferrer sponsored">Riman Skincare</a>
@@ -352,7 +352,7 @@ export default function Home() {
           </button>
         </div>
         <nav className="mobile-nav" aria-label="mobile primary">
-          <a href="#journey" onClick={() => setMenuOpen(false)}>The Journey</a>
+          <a href="/shop" onClick={() => setMenuOpen(false)}>Shop All</a>
           <a href="#num" onClick={() => setMenuOpen(false)}>NŪM</a>
           <a href="#laser" onClick={() => setMenuOpen(false)}>Laser Skin Care</a>
           <a href={RIMAN_URL} target="_blank" rel="noopener noreferrer sponsored" onClick={() => setMenuOpen(false)}>Riman Skincare</a>
@@ -373,6 +373,12 @@ export default function Home() {
               Good Skin, Good Hair,<br />
               Great Life
             </h1>
+          </div>
+
+          <div className="hero-cta-row">
+            <a href="/shop" className="book-cta">
+              Shop Now <span className="book-cta-icon" aria-hidden="true">→</span>
+            </a>
           </div>
 
           <div className="hero-media">
@@ -715,7 +721,7 @@ export default function Home() {
           <div className="footer-col">
             <h4>Navigate</h4>
             <ul>
-              <li><a href="#journey">The Journey</a></li>
+              <li><a href="/shop">Shop All</a></li>
               <li><a href="#num">NŪM</a></li>
               <li><a href="#laser">Laser Skin Care</a></li>
               <li><a href="#contact">Contact</a></li>
