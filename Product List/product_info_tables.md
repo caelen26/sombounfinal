@@ -62,43 +62,43 @@
     </tr>
     <tr>
       <td><b>Color Wow Xtra Large Bombshell Volumizer</b></td>
-      <td></td>
-      <td></td>
-      <td></td>
-      <td></td>
-      <td></td>
+      <td>39.50</td>
+      <td>An innovative weightless volumizing spray that delivers bombshell volume without damaging ingredients or harsh chemicals. Using a unique polymer-bamboo blend, this formula creates lift and thickness while keeping hair hydrated and intact.\n\n• Delivers weightless, long-lasting volume from roots to ends\n• Free from alcohol, salt, and drying resins\n• Includes heat protection to safeguard styled hair\n• Works on both damp and dry hair for versatile styling</td>
+      <td>- Water/Aqua/Eau\n- Propanediol\n- VP/DMAPA Acrylates Copolymer\n- Phenoxyethanol\n- Caprylyl Glycol\n- PPG-26-Buteth-26\n- PEG-40 Hydrogenated Castor Oil\n- Disodium EDTA\n- Benzalkonium Chloride\n- Bambusa Arundinacea Leaf Extract\n- Polyquaternium-22</td>
+      <td>./product_images/Color Wow Xtra Large Bombshell Volumizer (1).jpg</td>
+      <td>./product_images/Color Wow Xtra Large Bombshell Volumizer (2).jpg</td>
     </tr>
     <tr>
       <td><b>DesignME Hold.Me The Final Touch Styling Stick</b></td>
-      <td></td>
-      <td></td>
-      <td></td>
-      <td></td>
-      <td></td>
+      <td>27.00</td>
+      <td>A vegan hair wax stick infused with nourishing castor seed oil that instantly tames frizz and flyaways for smooth, polished styles. The innovative tear-drop shape ensures mess-free, precise application without tugging or damaging delicate hair strands.\n\n• Instantly controls frizz and flyaways for sleek finishes\n• Medium hold with satin-smooth, flake-free results\n• Enriched with castor seed oil, jojoba esters, and candelilla wax\n• 100% vegan, cruelty-free, and suitable for all hair types</td>
+      <td>- Helianthus Annuus Seed Oil\n- Bis-Diglyceryl Polyacyladipate-2\n- Polyglyceryl-4 Caprate\n- Caprylic/Capric Triglyceride\n- Microcrystalline Wax\n- Ceresin\n- Euphorbia Cerifera Wax\n- PEG-120 Methyl Glucose Dioleate\n- Simmondsia Chinensis Seed Oil\n- Ricinus Communis Seed Oil\n- Botanical extracts\n- Biotin</td>
+      <td>./product_images/DesignME Hold.Me The Final Touch Styling Stick (1).jpg</td>
+      <td>./product_images/DesignME Hold.Me The Final Touch Styling Stick (2).jpg</td>
     </tr>
     <tr>
       <td><b>evo fabuloso Platinum Blonde Colour Boosting Treatment</b></td>
-      <td></td>
-      <td></td>
-      <td></td>
-      <td></td>
-      <td></td>
+      <td>54.50</td>
+      <td>A nourishing toning conditioner specifically formulated for blonde, grey, and lightened hair. This intensive 3-minute treatment instantly refreshes tired tones, neutralizes unwanted brass, and revives color-treated hair with brilliant shine and softness.\n\n• Reduces brassy, yellow tones while brightening blonde hair\n• Restores moisture balance and minimizes frizz\n• Infused with argan and macadamia seed oils for nourishment\n• Vegan, sulfate-free, and cruelty-free formula</td>
+      <td>- Aqua/Water\n- Cetearyl Alcohol\n- Isopropyl Myristate\n- Panthenol\n- Fragrance/Parfum\n- Cetrimonium Chloride\n- Phenoxyethanol\n- PEG-20 Stearate\n- Amodimethicone\n- Glycerin\n- Macadamia Ternifolia Seed Oil\n- Argania Spinosa Kernel Oil\n- Benzophenone-4\n- Benzoic Acid\n- CI 60730 (Ext. Violet 2)\n- CI 42090 (Acid Blue 9)</td>
+      <td>./product_images/evo fabuloso Platinum Blonde Colour Boosting Treatment (1).jpg</td>
+      <td>./product_images/evo fabuloso Platinum Blonde Colour Boosting Treatment (2).jpg</td>
     </tr>
     <tr>
       <td><b>evo mane attention protein treatment masque</b></td>
-      <td></td>
-      <td></td>
-      <td></td>
-      <td></td>
-      <td></td>
+      <td>43.00</td>
+      <td>An intensive protein-rich reconstructor designed to repair, strengthen, and restore damaged, color-treated hair. Formulated with hydrolyzed quinoa and soy proteins combined with nourishing shea butter, this treatment restores softness, shine, and manageability while preventing breakage.\n\n• Deeply repairs and reconstructs damaged, sensitized hair\n• Strengthens weakened strands and improves elasticity\n• Enhances shine and reduces frizz for smoother texture\n• Contains UV protectors to prevent color fade and maintain vibrancy</td>
+      <td>- Aqua/Water\n- Hydrolyzed Soy Protein\n- Hydrolyzed Quinoa\n- Butyrospermum Parkii (Shea Butter)\n- Argania Spinosa Kernel Oil\n- Macadamia Integrifolia Seed Oil\n- Simmondsia Chinensis (Jojoba) Seed Oil\n- Panthenol\n- Cetearyl Alcohol\n- Phenoxyethanol\n- Glycerin\n- Benzophenone-4</td>
+      <td>./product_images/evo mane attention protein treatment masque (1).jpg</td>
+      <td>./product_images/evo mane attention protein treatment masque (2).jpg</td>
     </tr>
     <tr>
       <td><b>Incellderm Active Clean-up Powder</b></td>
-      <td></td>
-      <td></td>
-      <td></td>
-      <td></td>
-      <td></td>
+      <td>42.00</td>
+      <td>A water-activated enzyme cleanser featuring powerful papain enzymes and plant-derived ingredients that gently remove dead skin cells and impurities without harsh scrubbing. When mixed with water, this fine powder transforms into a rich, luxurious foam that exfoliates and brightens while supporting the skin barrier.\n\n• Natural papain enzymes and plant extracts for gentle exfoliation\n• Enriched with hydrolyzed collagen and centella asiatica for barrier support\n• Removes dead skin cells and unclogs pores for refined texture\n• Promotes cell renewal and maintains optimal moisture balance</td>
+      <td>- Zea Mays (Corn) Starch\n- Sodium Cocoyl Isethionate\n- Sodium Lauroyl Glutamate\n- Aqua/Water\n- Butylene Glycol\n- Sorbitol\n- Allantoin\n- Betaine\n- Citric Acid\n- Maltodextrin\n- Papain\n- Hydrolyzed Collagen\n- Avena Sativa (Oat) Meal Extract\n- Houttuynia Cordata Extract\n- Camellia Sinensis Leaf Extract\n- Ascorbyl Palmitate</td>
+      <td>./product_images/Incellderm Active Clean-up Powder (1).jpg</td>
+      <td>./product_images/Incellderm Active Clean-up Powder (2).jpg</td>
     </tr>
     <tr>
       <td><b>Incellderm Daily Aqua BB</b></td>
