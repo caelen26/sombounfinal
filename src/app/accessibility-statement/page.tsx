@@ -221,40 +221,7 @@ export default function AccessibilityStatement() {
         </section>
 
         <section className="pp-section">
-          <h2>7. Formal Complaints</h2>
-          <p>
-            If you are not satisfied with our response to an accessibility concern, you have the
-            right to file a complaint. In Canada, individuals can contact:
-          </p>
-          <ul>
-            <li>
-              <a
-                href="https://www.chrc-ccdp.gc.ca/en"
-                target="_blank"
-                rel="noopener noreferrer"
-                className="pp-link"
-              >
-                Canadian Human Rights Commission
-              </a>{" "}
-              — for complaints related to federal obligations under the{" "}
-              <em>Accessible Canada Act</em>
-            </li>
-            <li>
-              <a
-                href="https://manitobahumanrights.ca/"
-                target="_blank"
-                rel="noopener noreferrer"
-                className="pp-link"
-              >
-                Manitoba Human Rights Commission
-              </a>{" "}
-              — for complaints under Manitoba&apos;s provincial human rights legislation
-            </li>
-          </ul>
-        </section>
-
-        <section className="pp-section">
-          <h2>8. Changes to This Statement</h2>
+          <h2>7. Changes to This Statement</h2>
           <p>
             We review and update this Accessibility Statement as our website evolves and as we
             make accessibility improvements. The &ldquo;Last updated&rdquo; date at the top of
