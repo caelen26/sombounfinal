@@ -22,43 +22,43 @@
     -->
     <tr>
       <td><b>Botalab Deserticola Hair Oil Serum</b></td>
-      <td></td>
-      <td></td>
-      <td></td>
-      <td></td>
-      <td></td>
+      <td>49.00</td>
+      <td>Botalab Deserticola Hair Oil Serum is a luxurious nourishing treatment formulated with resilient microalgae that thrive in harsh desert environments. This 100ml serum combines powerful botanical oils with exclusive Deserticola and Loliolide ingredients to restore, repair, and revitalize damaged hair from root to tip.\n\n• Moisturizes and adds shine while improving damaged hair cuticles\n• Provides 24-hour volume boost and reduces breakage and frizz\n• Delivers heat protection and nourishing nutrients to hair strands\n• Hypoallergenic, vegan certified, and cruelty-free formula</td>
+      <td>- Cyclopentasiloxane\n- Dimethiconol\n- Dimethicone\n- Caprylic/Capric Triglyceride\n- Chlorella Ferment (Deserticola)\n- Centella Asiatica Extract\n- Camellia Japonica Seed Oil\n- Argania Spinosa Kernel Oil\n- Prunus Armeniaca (Apricot) Kernel Oil\n- Crambe Abyssinica Seed Oil\n- Citrus Junos Seed Oil\n- Simmondsia Chinensis (Jojoba) Seed Oil\n- Helianthus Annuus (Sunflower) Seed Oil\n- Juniperus Mexicana Oil\n- Amyris Balsamifera Bark Oil\n- Citrus Aurantium Bergamia (Bergamot) Fruit Oil\n- Pogostemon Cablin Oil\n- Citrus Limon (Lemon) Peel Oil\n- Pelargonium Graveolens Flower Oil\n- Cymbopogon Martini Oil\n- Tocopherol\n- Phenyl Trimethicone\n- Limonene\n- Linalool\n- Geraniol</td>
+      <td>./product_images/Botalab Deserticola Hair Oil Serum (1).jpg</td>
+      <td>./product_images/Botalab Deserticola Hair Oil Serum (2).jpg</td>
     </tr>
     <tr>
       <td><b>Botalab Deserticola Shampoo</b></td>
-      <td></td>
-      <td></td>
-      <td></td>
-      <td></td>
-      <td></td>
+      <td>46.00</td>
+      <td>Botalab Deserticola Shampoo is a gentle yet powerful cleanser featuring the brand's signature Deserticola Plus formula created from microalgae that thrive in harsh desert climates. This 500ml shampoo cleanses the scalp deeply while maintaining the hair's natural moisture balance and health.\n\n• Cleanses 99% of fine dust and impurities from scalp and hair\n• Features exclusive Loliolide ingredients that soothe and hydrate sensitive scalps\n• Rich, nourishing foam gently removes buildup without disrupting the hair barrier\n• Hypoallergenic formula with naturally derived citrus scent for tired, stressed scalps</td>
+      <td>- Water\n- Coco-Betaine\n- Lauryl Glucoside\n- Sodium Lauroyl Methylaminopropionate\n- Sodium Cocoyl Alaninate\n- Butylene Glycol\n- Disodium Laureth Sulfosuccinate\n- Sodium Chloride\n- Hydroxyacetophenone\n- Urtica Dioica (Nettle) Extract\n- Polyquaternium-10\n- Camellia Japonica Leaf Extract\n- Propanediol\n- Citric Acid\n- Caprylyl Glycol\n- Artemisia Capillaris Extract\n- Camellia Japonica Flower Extract\n- Panthenol\n- Salicylic Acid\n- Selaginella Tamariscina Extract\n- Centella Asiatica Extract\n- Inonotus Obliquus (Mushroom) Extract\n- Citrus Aurantium Bergamia (Bergamot) Fruit Oil\n- Citrus Aurantium Dulcis (Orange) Peel Oil\n- Citrus Nobilis (Mandarin Orange) Peel Oil\n- Niacinamide\n- Maltodextrin\n- Pentasodium Pentetate\n- Glycerin\n- Caramel\n- Elaeis Guineensis (Palm) Oil\n- Olea Europaea (Olive) Fruit Extract\n- Chlorella Ferment\n- Polyglyceryl-3 Methylglucose Distearate\n- Methyl Glucose Sesquistearate\n- Cetearyl Glucoside\n- Hydrogenated Lecithin\n- Nicotinamide Adenine Dinucleotide\n- Linalool\n- Limonene</td>
+      <td>./product_images/Botalab Deserticola Shampoo (1).jpg</td>
+      <td>./product_images/Botalab Deserticola Shampoo (2).jpg</td>
     </tr>
     <tr>
       <td><b>Botalab Deserticola Water Treatment</b></td>
-      <td></td>
-      <td></td>
-      <td></td>
-      <td></td>
-      <td></td>
+      <td>38.00</td>
+      <td>Botalab Deserticola Water Treatment is an innovative leave-in conditioner that transforms dry, damaged hair into silky, manageable strands. This 300ml treatment features a unique water-to-cream formula that starts as a lightweight water treatment on the scalp and transforms into a nourishing cream that clings to hair for deep hydration and healing.\n\n• Advanced water-activated treatment formula that cleanses 99% of fine dust and impurities\n• Exclusive Deserticola and Loliolide ingredients soothe and nourish exhausted scalp and hair\n• Supports healthy hair density and provides nutrition and vitality to weakened strands\n• EWG certified, vegan, cruelty-free, and all-natural formulation</td>
+      <td>- Alcohol\n- Propylene Glycol\n- Myristyl Alcohol\n- Water\n- Butylene Glycol\n- Cetrimonium Chloride\n- Urtica Dioica (Nettle) Extract\n- Camellia Japonica Leaf Extract\n- Propanediol\n- Artemisia Capillaris Extract\n- Camellia Japonica Flower Extract\n- Selaginella Tamariscina Extract\n- Centella Asiatica Extract\n- Inonotus Obliquus (Mushroom) Extract\n- Glycerin\n- Salicylic Acid\n- Elaeis Guineensis (Palm) Oil\n- Panthenol\n- Citrus Aurantium Bergamia (Bergamot) Fruit Oil\n- Citrus Aurantium Dulcis (Orange) Peel Oil\n- Niacinamide\n- Citrus Nobilis (Mandarin Orange) Peel Oil\n- Olea Europaea (Olive) Fruit Extract\n- Polyglyceryl-3 Methylglucose Distearate\n- Chlorella Ferment\n- Methyl Glucose Sesquistearate\n- Cetearyl Glucoside\n- Hydrogenated Lecithin\n- Nicotinamide Adenine Dinucleotide\n- Hydroxyacetophenone\n- Linalool\n- Limonene</td>
+      <td>./product_images/Botalab Deserticola Water Treatment (1).jpg</td>
+      <td>./product_images/Botalab Deserticola Water Treatment (2).jpg</td>
     </tr>
     <tr>
       <td><b>Botalab Suamel Body Wash</b></td>
-      <td></td>
-      <td></td>
-      <td></td>
-      <td></td>
-      <td></td>
+      <td>42.00</td>
+      <td>Botalab Suamel Body Wash is a nourishing cleanser inspired by nature's bioremediators, using the Suamel eco-friendly ingredient to cleanse without disrupting the skin barrier. This 500ml body wash combines gentle botanical actives with hydrating complexes to deliver a rich, luxurious cleanse that leaves skin feeling soft, clean, and refreshed.\n\n• Gently removes dead skin cells while cleansing pores of excess sebum with salicylic acid\n• Contains HyaluroCollagen-3 complex that combines hyaluronic acid and vegan collagen for lasting hydration\n• Refresh Herb Complex with calming rosemary, lavender, and chamomile extracts soothe tired skin\n• EWG certified, vegan, cruelty-free, suitable for all skin types including sensitive and dry skin</td>
+      <td>- Purified Water\n- Sodium C14-16 Olefin Sulfonate\n- Disodium Cocoamphodiacetate\n- Glycerin\n- Coco-Betaine\n- Sodium Chloride\n- Citrus Limon (Lemon) Peel Oil\n- Salicylic Acid\n- Hydrolyzed Collagen\n- Butylene Glycol\n- Citric Acid\n- Sodium Hyaluronate Crosspolymer\n- Rosmarinus Officinalis (Rosemary) Leaf Oil\n- Artemisia Vulgaris (Mugwort) Extract\n- Abies Sibirica (Siberian Fir) Oil\n- Cymbopogon (Lemon Grass) Oil\n- Zingiber Officinale (Ginger) Oil\n- Aloe Barbadensis (Aloe Vera) Extract\n- Punica Granatum (Pomegranate) Fruit Extract\n- Lycium Barbarum (Goji Berry) Fruit Extract\n- Lycium Barbarum (Goji Berry) Root Extract\n- Hippophae Rhamnoides (Sea Buckthorn) Fruit Extract\n- Hexylene Glycol\n- Pentasodium Pentetate\n- Tocopherol\n- Propanediol\n- Phellodendron Amurense (Amur Cork Tree) Bark Extract\n- Scutellaria Baicalensis (Baikal Skullcap) Root Extract\n- Astragalus Membranaceus (Huang Qi) Root Extract\n- Artemisia Capillaris (Mugwort) Extract\n- Elaeis Guineensis (African Oil Palm) Oil</td>
+      <td>./product_images/Botalab Suamel Body Wash (1).jpg</td>
+      <td>./product_images/Botalab Suamel Body Wash (2).jpg</td>
     </tr>
     <tr>
       <td><b>Color Wow Texas Hold 'Em Extra Thickening Hair Spray</b></td>
-      <td></td>
-      <td></td>
-      <td></td>
-      <td></td>
-      <td></td>
+      <td>34.95</td>
+      <td>Color Wow Texas Hold 'Em Big Hold Hairspray is a professional-grade styling spray that delivers maximum hold and control for all-day style retention. This 291ml aerosol formula features UV and heat protection technology that creates a strong, brushable finish without flaking, crunchiness, or residue buildup.\n\n• Delivers 82% style retention in high humidity with advanced humidity-resistance technology\n• UV protection and heat protection up to 380°F for safe styling with hot tools\n• Produces a strong, brushable finish with no flaking, crunchiness, or stiff residue\n• Free from harmful chemicals: parabens, sulfates, phthalates, mineral oil, coal tar, and triclosan</td>
+      <td>- Alcohol Denat.\n- Butane\n- Propane\n- Octylacrylamide/Acrylates/Butylaminoethyl Methacrylate Copolymer\n- VA/Crotonates/Vinyl Neodecanoate Copolymer\n- Aminomethyl Propanol\n- Isobutane\n- Dimethicone\n- Triethyl Citrate\n- Pentaerythrityl Tetracaprylate/Tetracaprate\n- PEG/PPG-17/18 Dimethicone\n- Ethylhexyl Salicylate\n- Aqua (Water)\n- Propylene Glycol Dibenzoate\n- Fragrance (Parfum)\n- Propanediol\n- Bambusa Arundinacea Leaf Extract\n- Linalool\n- Hexyl Cinnamal</td>
+      <td>./product_images/Color Wow Texas Hold 'Em Extra Thickening Hair Spray (1).jpg</td>
+      <td>./product_images/Color Wow Texas Hold 'Em Extra Thickening Hair Spray (2).jpg</td>
     </tr>
     <tr>
       <td><b>Color Wow Xtra Large Bombshell Volumizer</b></td>
