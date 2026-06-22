@@ -3,7 +3,7 @@ import Stripe from "stripe";
 
 export const dynamic = "force-dynamic";
 
-// Returns up to 5 products for the homepage best-sellers section.
+// Returns up to 4 products for the homepage best-sellers section.
 // Priority order:
 //   1. Products with Stripe metadata `featured: "true"` or `bestseller: "true"`
 //   2. Products with metadata `rank: "1"`, `rank: "2"`, etc. (lower = higher priority)
@@ -56,7 +56,7 @@ export async function GET() {
       return a.rank - b.rank;
     });
 
-    const mapped = annotated.slice(0, 5).map(({ product: p }) => {
+    const mapped = annotated.slice(0, 4).map(({ product: p }) => {
       const price = p.default_price as Stripe.Price | null;
       const primaryImage = p.images[0] ?? "/refined-num-image.png";
       return {

@@ -837,7 +837,10 @@ export default function Home() {
 
         <div className="subfoot">
           <div>©2026 Somboun June. All Rights Reserved.</div>
-          <a className="subfoot-link" href="/privacy-policy">Privacy Policy</a>
+          <div className="right">
+            <a className="subfoot-link" href="/privacy-policy">Privacy Policy</a>
+            <a className="subfoot-link" href="/accessibility-statement">Accessibility</a>
+          </div>
         </div>
       </footer>
 
