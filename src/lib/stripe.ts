@@ -13,6 +13,24 @@ export type Product = {
   ingredients?: string[]; // from Stripe metadata.ingredients (pipe-separated)
 };
 
+const NUM_DESCRIPTION =
+  "Grass-fed cattle are the best source for tallow-based skincare because they are animals that have been pasture-raised, providing a nutrient-rich diet. This results in tallow with a higher concentration of beneficial compounds, such as omega-3 fatty acids and antioxidants. These elements contribute to improved skin hydration, elasticity, and overall skin health.";
+const NUM_FEATURES = [
+  "Pasture-Raised & Grass-Fed",
+  "Rich in Omega-3 & Antioxidants",
+  "Deep Hydration & Elasticity",
+  "100% Biocompatible",
+];
+const NUM_INGREDIENTS = [
+  "Grass Fed Beef Tallow",
+  "Raspberry Seed Oil",
+  "Carrot Seed Oil",
+  "Frankincense",
+  "Calendula",
+  "Lavender Oil",
+  "Immortelle Oil",
+];
+
 const fallbackProducts: Product[] = [
   {
     id: "num-body-tallow",
@@ -21,6 +39,9 @@ const fallbackProducts: Product[] = [
     currency: "cad",
     image: "/refined-num-image.png",
     images: ["/refined-num-image.png", "/image-2.png"],
+    description: NUM_DESCRIPTION,
+    features: NUM_FEATURES,
+    ingredients: NUM_INGREDIENTS,
   },
   {
     id: "num-face-tallow",
@@ -29,6 +50,9 @@ const fallbackProducts: Product[] = [
     currency: "cad",
     image: "/skintallow.png",
     images: ["/skintallow.png", "/image-2.png"],
+    description: NUM_DESCRIPTION,
+    features: NUM_FEATURES,
+    ingredients: NUM_INGREDIENTS,
   },
 ];
 
