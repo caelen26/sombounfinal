@@ -149,6 +149,7 @@ export default function Home() {
   type CartItem = Product & { quantity: number };
   const [cartItems, setCartItems] = useState<CartItem[]>([]);
   const [cartOpen, setCartOpen] = useState(false);
+  const [cartLoaded, setCartLoaded] = useState(false);
   // Key format: `${source}:${productId}` — lets us flash the right button
   // when there are multiple cards/products on the page.
   const [addedFlashKey, setAddedFlashKey] = useState<string | null>(null);
@@ -229,6 +230,21 @@ export default function Home() {
     e.preventDefault();
     setCfSubmitted(true);
   };
+
+  // Restore cart from localStorage on first load
+  useEffect(() => {
+    try {
+      const saved = localStorage.getItem("sj_cart");
+      if (saved) setCartItems(JSON.parse(saved));
+    } catch { /* ignore parse errors */ }
+    setCartLoaded(true);
+  }, []);
+
+  // Persist cart to localStorage whenever it changes (after initial load)
+  useEffect(() => {
+    if (!cartLoaded) return;
+    localStorage.setItem("sj_cart", JSON.stringify(cartItems));
+  }, [cartItems, cartLoaded]);
 
   // Lock body scroll when mobile menu is open
   useEffect(() => {
