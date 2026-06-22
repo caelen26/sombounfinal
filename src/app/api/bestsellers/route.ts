@@ -1,0 +1,85 @@
+import { NextResponse } from "next/server";
+import Stripe from "stripe";
+
+export const dynamic = "force-dynamic";
+
+// Returns up to 5 products for the homepage best-sellers section.
+// Priority order:
+//   1. Products with Stripe metadata `featured: "true"` or `bestseller: "true"`
+//   2. Products with metadata `rank: "1"`, `rank: "2"`, etc. (lower = higher priority)
+//   3. Everything else, in the order Stripe returns them
+//
+// To mark a product as featured, add metadata in the Stripe Dashboard:
+//   Key: featured   Value: true
+// Optionally add `rank: "1"` etc. to control order among featured products.
+
+export async function GET() {
+  const key = process.env.STRIPE_SECRET_KEY;
+  if (!key || key.startsWith("sk_REPLACE")) {
+    return NextResponse.json([
+      {
+        id: "num-body-tallow",
+        name: "NŪM Body Tallow",
+        price: 29.99,
+        currency: "cad",
+        image: "/refined-num-image.png",
+        images: ["/refined-num-image.png", "/image-2.png"],
+      },
+      {
+        id: "num-face-tallow",
+        name: "NŪM Face Tallow",
+        price: 29.99,
+        currency: "cad",
+        image: "/skintallow.png",
+        images: ["/skintallow.png", "/image-2.png"],
+      },
+    ]);
+  }
+
+  try {
+    const stripe = new Stripe(key);
+    const { data } = await stripe.products.list({
+      active: true,
+      limit: 100,
+      expand: ["data.default_price"],
+    });
+
+    const annotated = data.map((p) => ({
+      featured:
+        p.metadata?.featured === "true" || p.metadata?.bestseller === "true",
+      rank: parseInt(p.metadata?.rank ?? "999", 10),
+      product: p,
+    }));
+
+    annotated.sort((a, b) => {
+      if (a.featured !== b.featured) return a.featured ? -1 : 1;
+      return a.rank - b.rank;
+    });
+
+    const mapped = annotated.slice(0, 5).map(({ product: p }) => {
+      const price = p.default_price as Stripe.Price | null;
+      const primaryImage = p.images[0] ?? "/refined-num-image.png";
+      return {
+        id: p.id,
+        name: p.name,
+        price: price?.unit_amount ? price.unit_amount / 100 : 0,
+        currency: price?.currency ?? "cad",
+        image: primaryImage,
+        images: p.images.length > 0 ? p.images : [primaryImage],
+        description: p.description ?? undefined,
+        priceId: price?.id,
+        features: p.metadata?.features
+          ? p.metadata.features.split("|").map((s: string) => s.trim()).filter(Boolean)
+          : undefined,
+        ingredients: p.metadata?.ingredients
+          ? p.metadata.ingredients.split("|").map((s: string) => s.trim()).filter(Boolean)
+          : undefined,
+      };
+    });
+
+    return NextResponse.json(mapped);
+  } catch (err) {
+    console.error("[Stripe] bestsellers fetch failed:", err);
+    return NextResponse.json([]);
+  }
+}

@@ -70,6 +70,7 @@ export default function ShopClient({ products }: { products: Product[] }) {
   const [activeCategory, setActiveCategory] = useState("All");
   const [activeBrands, setActiveBrands] = useState<string[]>([]);
   const [searchQuery, setSearchQuery] = useState("");
+  const [visibleCount, setVisibleCount] = useState(20);
   const cartCloseRef = useRef<HTMLButtonElement | null>(null);
   const cartTriggerRef = useRef<HTMLElement | null>(null);
 
@@ -96,6 +97,14 @@ export default function ShopClient({ products }: { products: Product[] }) {
 
   const hasActiveFilters = activeCategory !== "All" || activeBrands.length > 0 || searchQuery.trim() !== "";
   const clearFilters = () => { setActiveCategory("All"); setActiveBrands([]); setSearchQuery(""); };
+
+  // Reset visible count when filters change
+  useEffect(() => {
+    setVisibleCount(20);
+  }, [activeCategory, activeBrands, searchQuery]);
+
+  const visibleProducts = filteredProducts.slice(0, visibleCount);
+  const hasMore = visibleCount < filteredProducts.length;
 
   const addToCart = (item: Product, source: "card" | "modal") => {
     setCartItems((prev) => {
@@ -380,10 +389,13 @@ export default function ShopClient({ products }: { products: Product[] }) {
             {/* Product Grid */}
             <div className="shop-grid-col">
               <div className="shop-result-count" aria-live="polite" style={{ marginBottom: "20px" }}>
-                {filteredProducts.length} {filteredProducts.length === 1 ? "product" : "products"}
+                {hasMore
+                  ? `Showing ${visibleProducts.length} of ${filteredProducts.length} products`
+                  : `${filteredProducts.length} ${filteredProducts.length === 1 ? "product" : "products"}`
+                }
               </div>
               <div className="shop-grid" aria-label="Products">
-              {filteredProducts.map((product) => {
+              {visibleProducts.map((product) => {
               const cardKey = `card:${product.id}`;
               return (
                 <div key={product.id} className="ps-card">
@@ -431,6 +443,17 @@ export default function ShopClient({ products }: { products: Product[] }) {
               );
             })}
               </div>
+              {hasMore && (
+                <div className="shop-load-more">
+                  <button
+                    type="button"
+                    className="book-cta book-cta--light"
+                    onClick={() => setVisibleCount((n) => n + 20)}
+                  >
+                    Load More Products <span className="book-cta-icon" aria-hidden="true">↓</span>
+                  </button>
+                </div>
+              )}
             </div>
           </div>{/* end shop-layout */}
         </div>

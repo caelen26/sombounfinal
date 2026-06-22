@@ -1055,7 +1055,7 @@ button { font: inherit; color: inherit; background: none; border: 0; cursor: poi
     padding: 16px var(--pad-x);
   }
   .nav    { display: none; }
-  .icon-row { display: none; }
+  .icon-row { display: flex; margin-left: auto; gap: 8px; }
   .hamburger { display: flex; }
 
   /* ── Hero ── */
@@ -1177,7 +1177,7 @@ button { font: inherit; color: inherit; background: none; border: 0; cursor: poi
   padding: clamp(48px, 5vw, 80px) var(--pad-x);
 }
 .ps-inner {
-  max-width: 980px;
+  max-width: 1400px;
   margin: 0 auto;
   display: flex;
   flex-direction: column;
@@ -2122,6 +2122,19 @@ button { font: inherit; color: inherit; background: none; border: 0; cursor: poi
   box-shadow: 0 0 0 2px var(--cream), 0 0 0 4px var(--sage-deep);
 }
 .book-cta-icon { font-size: 14px; letter-spacing: 0; }
+.book-cta--light {
+  background: rgba(255,255,255,.96);
+  color: var(--ink);
+}
+.book-cta--light:hover { background: #fff; transform: translateY(-1px); }
+
+/* Load More button — used on /shop */
+.shop-load-more {
+  display: flex;
+  justify-content: center;
+  margin-top: clamp(32px, 4vw, 48px);
+  padding-bottom: 8px;
+}
 
 /* ===========================================================
    BOOKING MODAL — Cal.com iframe embed

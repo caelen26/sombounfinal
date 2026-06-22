@@ -26,6 +26,76 @@ const reviews = [
   },
 ];
 
+// ── Product type (matches @/lib/stripe Product) ──────────────────────────────
+type Product = {
+  id: string;
+  name: string;
+  price: number;
+  currency: string;
+  image: string;
+  images: string[];
+  description?: string;
+  priceId?: string;
+  features?: string[];
+  ingredients?: string[];
+};
+
+// Brand prefix → [brand label, category] (longest-prefix first to avoid partial matches)
+const BRAND_MAP: [string, string, string][] = [
+  ["Schwarzkopf Professional", "Schwarzkopf Professional", "Hair Care"],
+  ["Kevin.Murphy + Color.Me", "Kevin.Murphy", "Hair Care"],
+  ["Kevin.Murphy", "Kevin.Murphy", "Hair Care"],
+  ["Living Proof", "Living Proof", "Hair Care"],
+  ["Color Wow", "Color Wow", "Hair Care"],
+  ["iS Clinical", "iS Clinical", "Skin Care"],
+  ["Mayfa MD", "Mayfa MD", "Skin Care"],
+  ["NŪM Skin", "NŪM Skin", "Skin Care"],
+  ["Incellderm", "Incellderm", "Skin Care"],
+  ["Botalab", "Botalab", "Hair Care"],
+  ["DesignME", "DesignME", "Hair Care"],
+  ["Lifening", "Lifening", "Wellness"],
+  ["Olaplex", "Olaplex", "Hair Care"],
+  ["Joico", "Joico", "Hair Care"],
+  ["Neuma", "Neuma", "Hair Care"],
+  ["MIFA", "MIFA", "Body Care"],
+  ["Unite", "Unite", "Hair Care"],
+  ["K18", "K18", "Hair Care"],
+  ["evo", "evo", "Hair Care"],
+  ["NŪM", "NŪM", "Skin Care"],
+];
+function getBrand(name: string): string {
+  for (const [prefix, brand] of BRAND_MAP) {
+    if (name.startsWith(prefix)) return brand;
+  }
+  return name.split(" ")[0] || name;
+}
+function getProductName(name: string): string {
+  for (const [prefix] of BRAND_MAP) {
+    if (name.startsWith(prefix)) return name.slice(prefix.length).trim();
+  }
+  return name;
+}
+
+// Fallback products shown before Stripe data loads
+const FALLBACK_BEST_SELLERS: Product[] = [
+  {
+    id: "num-body-tallow",
+    name: "NŪM Body Tallow",
+    price: 29.99,
+    currency: "cad",
+    image: "/refined-num-image.png",
+    images: ["/refined-num-image.png", "/image-2.png"],
+  },
+  {
+    id: "num-face-tallow",
+    name: "NŪM Face Tallow",
+    price: 29.99,
+    currency: "cad",
+    image: "/skintallow.png",
+    images: ["/skintallow.png", "/image-2.png"],
+  },
+];
+
 function buildQuatPath(w: number, h: number, opts?: { rFactor?: number }) {
   const min = Math.min(w, h);
   const rFactor = opts?.rFactor ?? 0.055;
@@ -62,24 +132,8 @@ export default function Home() {
   const [noAnim, setNoAnim] = useState(false);
   const [cfSubmitted, setCfSubmitted] = useState(false);
   const [menuOpen, setMenuOpen] = useState(false);
-
-  // Product catalog. `image` is the primary (used for cart thumbnails);
-  // `images` is the carousel sequence shown in cards + modal.
-  type Product = { id: string; name: string; price: number; image: string; images: string[] };
-  const numBodyTallow: Product = {
-    id: "num-body-tallow",
-    name: "NŪM Body Tallow",
-    price: 29.99,
-    image: "/refined-num-image.png",
-    images: ["/refined-num-image.png", "/image-2.png"],
-  };
-  const numFaceTallow: Product = {
-    id: "num-face-tallow",
-    name: "NŪM Face Tallow",
-    price: 29.99,
-    image: "/skintallow.png",
-    images: ["/skintallow.png", "/image-2.png"],
-  };
+  const [bestSellers, setBestSellers] = useState<Product[]>(FALLBACK_BEST_SELLERS);
+  const [checkoutLoading, setCheckoutLoading] = useState(false);
 
   // Product modal state + refs
   const [modalProduct, setModalProduct] = useState<Product | null>(null);
@@ -133,15 +187,42 @@ export default function Home() {
     );
   };
   const removeFromCart = (id: string) => setCartItems((prev) => prev.filter((i) => i.id !== id));
-  const handleCheckout = () => {
+  const formatPrice = (product: Product) => {
+    const currency = (product.currency ?? "cad").toUpperCase();
+    return `${currency}$ ${product.price.toFixed(2)}`;
+  };
+
+  const handleCheckout = async () => {
+    setCheckoutLoading(true);
+    try {
+      const res = await fetch("/api/checkout", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          items: cartItems.map((i) => ({
+            priceId: i.priceId,
+            name: i.name,
+            price: i.price,
+            currency: i.currency ?? "cad",
+            image: i.image,
+            quantity: i.quantity,
+          })),
+          origin: window.location.origin,
+        }),
+      });
+      const data = await res.json();
+      if (data.url) {
+        window.location.href = data.url;
+        return;
+      }
+    } catch {
+      // fall through to email fallback
+    }
+    setCheckoutLoading(false);
     const lines = cartItems
       .map((i) => `  - ${i.name} × ${i.quantity}  ($${(i.price * i.quantity).toFixed(2)})`)
       .join("\n");
-    const subject = encodeURIComponent("NŪM Order Request");
-    const body = encodeURIComponent(
-      `Hello Somboun,\n\nI'd like to place the following order:\n\n${lines}\n\nSubtotal: $${cartSubtotal.toFixed(2)} CAD\n\nPlease send payment + shipping details. Thank you!\n`
-    );
-    window.location.href = `mailto:sombounp@gmail.com?subject=${subject}&body=${body}`;
+    window.location.href = `mailto:sombounp@gmail.com?subject=${encodeURIComponent("Order Request")}&body=${encodeURIComponent(`Hello Somboun,\n\nI'd like to place the following order:\n\n${lines}\n\nSubtotal: $${cartSubtotal.toFixed(2)} CAD\n\nThank you!`)}`;
   };
 
   const handleContactSubmit = (e: React.FormEvent) => {
@@ -210,6 +291,16 @@ export default function Home() {
       bookingTriggerRef.current?.focus();
     };
   }, [bookingOpen]);
+
+  // Fetch best sellers from Stripe via API route
+  useEffect(() => {
+    fetch("/api/bestsellers")
+      .then((r) => r.json())
+      .then((data: Product[]) => {
+        if (Array.isArray(data) && data.length > 0) setBestSellers(data);
+      })
+      .catch(() => {}); // keep fallback on error
+  }, []);
 
   const goNext = () => setVIdx((i) => i + 1);
   const goPrev = () => setVIdx((i) => i - 1);
@@ -505,35 +596,29 @@ export default function Home() {
         </div>
       </section>
 
-      {/* ── NŪM Product Showcase ── */}
+      {/* ── Best Sellers (Stripe-powered) ── */}
       <section id="num" className="ps-section sage-section">
         <div className="ps-inner">
           <div className="ps-intro">
             <div className="ps-eyebrow">BEST-SELLING SKINCARE</div>
-            <h2 className="ps-heading"><span className="num-brand">NŪM</span><br />Skin Care</h2>
+            <h2 className="ps-heading">Best Sellers</h2>
             <p className="ps-lede">
-              Pasture-raised, grass-fed tallow paired with cold-pressed botanicals.
-              A small, considered line built for skin that asks for less, not more.
+              Our top picks across skincare and hair care — curated from our full collection.
             </p>
           </div>
           <div className="ps-grid">
-            {[numBodyTallow, numFaceTallow].map((product) => {
-              const label = product.name.replace(/^NŪM\s*/, "").toUpperCase();
+            {bestSellers.map((product) => {
               const cardKey = `card:${product.id}`;
-              // Card always shows the primary image — sliders removed from grid
+              const brandLabel = getBrand(product.name);
+              const productLabel = getProductName(product.name);
               return (
                 <div key={product.id} className="ps-card">
                   <div className="ps-card-media">
                     <div
                       className="ps-card-img"
-                      style={{
-                        backgroundImage: `url("${product.image}")`,
-                        // Nudge Face Tallow a touch more centred
-                        backgroundPosition: product.id === "num-face-tallow" ? "center 40%" : "center",
-                      }}
+                      style={{ backgroundImage: `url("${product.image}")` }}
                       aria-hidden="true"
                     />
-                    {/* Transparent click overlay to open modal */}
                     <button
                       type="button"
                       className="ps-card-img-link"
@@ -550,8 +635,11 @@ export default function Home() {
                     aria-label={`View ${product.name} details`}
                   >
                     <div className="ps-card-foot">
-                      <div className="ps-card-name"><strong className="num-brand">NŪM</strong> {label}</div>
-                      <div className="ps-card-price">CAD$ {product.price.toFixed(2)}</div>
+                      <div className="ps-card-name">
+                        <span className="ps-card-brand">{brandLabel}</span>
+                        <span className="ps-card-product">{productLabel || product.name}</span>
+                      </div>
+                      <div className="ps-card-price">{formatPrice(product)}</div>
                     </div>
                   </button>
                   <button
@@ -565,6 +653,11 @@ export default function Home() {
                 </div>
               );
             })}
+          </div>
+          <div className="tx-cta">
+            <a href="/shop" className="book-cta book-cta--light">
+              Shop All Products <span className="book-cta-icon" aria-hidden="true">→</span>
+            </a>
           </div>
         </div>
       </section>
@@ -848,9 +941,12 @@ export default function Home() {
 
             {/* Right: product info */}
             <div className="pm-content">
-              <div className="pm-eyebrow"><span className="num-brand">NŪM</span> {modalProduct.name.replace(/^NŪM\s*/, "").toUpperCase()}</div>
-              <h2 id="pm-title" className="pm-title">{modalProduct.name.replace(/^NŪM\s*/, "")}</h2>
-              <div className="pm-price">$29.99 <span className="pm-price-unit">/ bottle</span></div>
+              <div className="pm-eyebrow">
+                {getBrand(modalProduct.name)}{" "}
+                <span style={{ opacity: .55 }}>{getProductName(modalProduct.name).toUpperCase()}</span>
+              </div>
+              <h2 id="pm-title" className="pm-title">{getProductName(modalProduct.name) || modalProduct.name}</h2>
+              <div className="pm-price">{formatPrice(modalProduct)}</div>
 
               <button
                 type="button"
@@ -878,49 +974,35 @@ export default function Home() {
                     <span className="pm-acc-icon" aria-hidden="true">{openAccordion === "details" ? "−" : "+"}</span>
                   </button>
                   <div id="pm-acc-details" className="pm-acc-body" role="region">
-                    <p>
-                      Grass-fed cattle are the best source for tallow-based skincare because they are
-                      animals that have been pasture-raised, providing a nutrient-rich diet. This results
-                      in tallow with a higher concentration of beneficial compounds, such as omega-3 fatty
-                      acids and antioxidants. These elements contribute to improved skin hydration,
-                      elasticity, and overall skin health.
-                    </p>
-                    <ul className="pm-acc-list">
-                      <li>Pasture-Raised &amp; Grass-Fed</li>
-                      <li>Rich in Omega-3 &amp; Antioxidants</li>
-                      <li>Deep Hydration &amp; Elasticity</li>
-                      <li>100% Biocompatible</li>
-                    </ul>
+                    {modalProduct.description
+                      ? <p>{modalProduct.description}</p>
+                      : <p style={{ color: "var(--muted)", fontStyle: "italic" }}>Product details coming soon. Contact us for more information.</p>
+                    }
+                    {modalProduct.features && modalProduct.features.length > 0 && (
+                      <ul className="pm-acc-list">
+                        {modalProduct.features.map((f) => <li key={f}>{f}</li>)}
+                      </ul>
+                    )}
                   </div>
                 </div>
 
-                <div className={`pm-acc-item${openAccordion === "ingredients" ? " is-open" : ""}`}>
-                  <button
-                    type="button"
-                    className="pm-acc-trigger"
-                    aria-expanded={openAccordion === "ingredients"}
-                    aria-controls="pm-acc-ingredients"
-                    onClick={() => setOpenAccordion(openAccordion === "ingredients" ? null : "ingredients")}
-                  >
-                    <span>Ingredients</span>
-                    <span className="pm-acc-icon" aria-hidden="true">{openAccordion === "ingredients" ? "−" : "+"}</span>
-                  </button>
-                  <div id="pm-acc-ingredients" className="pm-acc-body" role="region">
-                    <div className="pm-ing-head">
-                      <div className="pm-ing-title">The Formula</div>
-                      <div className="pm-ing-sub">Pure &amp; Organic Composition</div>
+                {modalProduct.ingredients && modalProduct.ingredients.length > 0 && (
+                  <div className={`pm-acc-item${openAccordion === "ingredients" ? " is-open" : ""}`}>
+                    <button
+                      type="button"
+                      className="pm-acc-trigger"
+                      aria-expanded={openAccordion === "ingredients"}
+                      aria-controls="pm-acc-ingredients"
+                      onClick={() => setOpenAccordion(openAccordion === "ingredients" ? null : "ingredients")}
+                    >
+                      <span>Ingredients</span>
+                      <span className="pm-acc-icon" aria-hidden="true">{openAccordion === "ingredients" ? "−" : "+"}</span>
+                    </button>
+                    <div id="pm-acc-ingredients" className="pm-acc-body" role="region">
+                      <p className="pm-ing-text">{modalProduct.ingredients.join(", ")}</p>
                     </div>
-                    <dl className="pm-ing-list">
-                      <div><dt>Grass Fed Beef Tallow</dt><dd>Pasture-Raised Base</dd></div>
-                      <div><dt>Raspberry Seed Oil</dt><dd>Organic Rubus Idaeus</dd></div>
-                      <div><dt>Carrot Seed Oil</dt><dd>Organic Daucus Carota Sativa</dd></div>
-                      <div><dt>Frankincense</dt><dd>Organic Boswellia</dd></div>
-                      <div><dt>Calendula</dt><dd>Organic Calendula Officinalis</dd></div>
-                      <div><dt>Lavender Oil</dt><dd>Organic Lavender Angustifolia</dd></div>
-                      <div><dt>Immortelle Oil</dt><dd>Therapeutic Helichrysum Italicum</dd></div>
-                    </dl>
                   </div>
-                </div>
+                )}
               </div>
             </div>
           </div>
@@ -998,8 +1080,8 @@ export default function Home() {
                   <span className="cart-subtotal-value">${cartSubtotal.toFixed(2)} CAD</span>
                 </div>
                 <div className="cart-note">Shipping and taxes calculated at checkout.</div>
-                <button type="button" className="cart-checkout" onClick={handleCheckout}>
-                  Checkout
+                <button type="button" className="cart-checkout" onClick={handleCheckout} disabled={checkoutLoading}>
+                  {checkoutLoading ? "Redirecting…" : "Checkout"}
                 </button>
               </footer>
             )}
