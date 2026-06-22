@@ -1,6 +1,8 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
+import { useCart } from "@/context/CartContext";
+import type { Product } from "@/lib/stripe";
 
 const RIMAN_URL =
   "https://mall.riman.com/member-ship/home?referrerCode=4007357701&utm_source=ig&utm_medium=social&utm_content=link_in_bio&fbclid=PAZXh0bgNhZW0CMTEAc3J0YwZhcHBfaWQPOTM2NjE5NzQzMzkyNDU5AAGnSzlvjf0O5Yyn99fFymE0Aky-MiXIB-0PzUTIDENClmui_dqi2nUpcTGlGEc_aem_a7CJKao6iWR6PtZ_yXHYNw";
@@ -26,19 +28,6 @@ const reviews = [
   },
 ];
 
-// ── Product type (matches @/lib/stripe Product) ──────────────────────────────
-type Product = {
-  id: string;
-  name: string;
-  price: number;
-  currency: string;
-  image: string;
-  images: string[];
-  description?: string;
-  priceId?: string;
-  features?: string[];
-  ingredients?: string[];
-};
 
 // Brand prefix → [brand label, category] (longest-prefix first to avoid partial matches)
 const BRAND_MAP: [string, string, string][] = [
@@ -133,7 +122,7 @@ export default function Home() {
   const [cfSubmitted, setCfSubmitted] = useState(false);
   const [menuOpen, setMenuOpen] = useState(false);
   const [bestSellers, setBestSellers] = useState<Product[]>(FALLBACK_BEST_SELLERS);
-  const [checkoutLoading, setCheckoutLoading] = useState(false);
+  const { cartItems, cartCount, cartSubtotal, addedFlashKey, checkoutLoading, setCheckoutLoading, addToCart, removeFromCart, updateQty } = useCart();
 
   // Product modal state + refs
   const [modalProduct, setModalProduct] = useState<Product | null>(null);
@@ -145,14 +134,8 @@ export default function Home() {
   const closeBtnRef = useRef<HTMLButtonElement | null>(null);
   const modalPanelRef = useRef<HTMLDivElement | null>(null);
 
-  // Cart state
-  type CartItem = Product & { quantity: number };
-  const [cartItems, setCartItems] = useState<CartItem[]>([]);
+  // Cart drawer UI state (shared cart data comes from CartContext)
   const [cartOpen, setCartOpen] = useState(false);
-  const [cartLoaded, setCartLoaded] = useState(false);
-  // Key format: `${source}:${productId}` — lets us flash the right button
-  // when there are multiple cards/products on the page.
-  const [addedFlashKey, setAddedFlashKey] = useState<string | null>(null);
   const cartCloseRef = useRef<HTMLButtonElement | null>(null);
   const cartTriggerRef = useRef<HTMLElement | null>(null);
 
@@ -161,33 +144,11 @@ export default function Home() {
   const bookingCloseRef = useRef<HTMLButtonElement | null>(null);
   const bookingTriggerRef = useRef<HTMLElement | null>(null);
 
-  const cartCount = cartItems.reduce((n, i) => n + i.quantity, 0);
-  const cartSubtotal = cartItems.reduce((s, i) => s + i.price * i.quantity, 0);
-
-  const addToCart = (item: Product, source: "card" | "modal") => {
-    setCartItems((prev) => {
-      const existing = prev.find((i) => i.id === item.id);
-      if (existing) {
-        return prev.map((i) => (i.id === item.id ? { ...i, quantity: i.quantity + 1 } : i));
-      }
-      return [...prev, { ...item, quantity: 1 }];
-    });
-    setAddedFlashKey(`${source}:${item.id}`);
-    window.setTimeout(() => setAddedFlashKey(null), 1200);
-  };
   const openProductModal = (product: Product, triggerEl: HTMLElement) => {
     lastFocusedRef.current = triggerEl;
     setModalProduct(product);
   };
   const closeProductModal = () => setModalProduct(null);
-  const updateQty = (id: string, delta: number) => {
-    setCartItems((prev) =>
-      prev
-        .map((i) => (i.id === id ? { ...i, quantity: Math.max(0, i.quantity + delta) } : i))
-        .filter((i) => i.quantity > 0)
-    );
-  };
-  const removeFromCart = (id: string) => setCartItems((prev) => prev.filter((i) => i.id !== id));
   const formatPrice = (product: Product) => {
     const currency = (product.currency ?? "cad").toUpperCase();
     return `${currency}$ ${product.price.toFixed(2)}`;
@@ -230,21 +191,6 @@ export default function Home() {
     e.preventDefault();
     setCfSubmitted(true);
   };
-
-  // Restore cart from localStorage on first load
-  useEffect(() => {
-    try {
-      const saved = localStorage.getItem("sj_cart");
-      if (saved) setCartItems(JSON.parse(saved));
-    } catch { /* ignore parse errors */ }
-    setCartLoaded(true);
-  }, []);
-
-  // Persist cart to localStorage whenever it changes (after initial load)
-  useEffect(() => {
-    if (!cartLoaded) return;
-    localStorage.setItem("sj_cart", JSON.stringify(cartItems));
-  }, [cartItems, cartLoaded]);
 
   // Lock body scroll when mobile menu is open
   useEffect(() => {

@@ -2,6 +2,7 @@
 
 import { useEffect, useRef, useState } from "react";
 import type { Product } from "@/lib/stripe";
+import { useCart } from "@/context/CartContext";
 
 const RIMAN_URL =
   "https://mall.riman.com/member-ship/home?referrerCode=4007357701&utm_source=ig&utm_medium=social&utm_content=link_in_bio&fbclid=PAZXh0bgNhZW0CMTEAc3J0YwZhcHBfaWQPOTM2NjE5NzQzMzkyNDU5AAGnSzlvjf0O5Yyn99fFymE0Aky-MiXIB-0PzUTIDENClmui_dqi2nUpcTGlGEc_aem_a7CJKao6iWR6PtZ_yXHYNw";
@@ -50,8 +51,6 @@ function getProductName(name: string): string {
   return name;
 }
 
-type CartItem = Product & { quantity: number };
-
 export default function ShopClient({ products }: { products: Product[] }) {
   const [menuOpen, setMenuOpen] = useState(false);
   const [modalProduct, setModalProduct] = useState<Product | null>(null);
@@ -62,10 +61,8 @@ export default function ShopClient({ products }: { products: Product[] }) {
   const closeBtnRef = useRef<HTMLButtonElement | null>(null);
   const modalPanelRef = useRef<HTMLDivElement | null>(null);
 
-  const [cartItems, setCartItems] = useState<CartItem[]>([]);
+  const { cartItems, cartCount, cartSubtotal, addedFlashKey, checkoutLoading, setCheckoutLoading, addToCart, removeFromCart, updateQty, clearCart } = useCart();
   const [cartOpen, setCartOpen] = useState(false);
-  const [addedFlashKey, setAddedFlashKey] = useState<string | null>(null);
-  const [checkoutLoading, setCheckoutLoading] = useState(false);
   const [orderSuccess, setOrderSuccess] = useState(false);
   const [activeCategory, setActiveCategory] = useState("All");
   const [activeBrands, setActiveBrands] = useState<string[]>([]);
@@ -73,9 +70,6 @@ export default function ShopClient({ products }: { products: Product[] }) {
   const [visibleCount, setVisibleCount] = useState(20);
   const cartCloseRef = useRef<HTMLButtonElement | null>(null);
   const cartTriggerRef = useRef<HTMLElement | null>(null);
-
-  const cartCount = cartItems.reduce((n, i) => n + i.quantity, 0);
-  const cartSubtotal = cartItems.reduce((s, i) => s + i.price * i.quantity, 0);
 
   const allBrands = Array.from(new Set(products.map((p) => getBrand(p.name)))).sort();
   const visibleBrands = activeCategory === "All"
@@ -106,31 +100,11 @@ export default function ShopClient({ products }: { products: Product[] }) {
   const visibleProducts = filteredProducts.slice(0, visibleCount);
   const hasMore = visibleCount < filteredProducts.length;
 
-  const addToCart = (item: Product, source: "card" | "modal") => {
-    setCartItems((prev) => {
-      const existing = prev.find((i) => i.id === item.id);
-      if (existing) return prev.map((i) => (i.id === item.id ? { ...i, quantity: i.quantity + 1 } : i));
-      return [...prev, { ...item, quantity: 1 }];
-    });
-    setAddedFlashKey(`${source}:${item.id}`);
-    window.setTimeout(() => setAddedFlashKey(null), 1200);
-  };
-
   const openProductModal = (product: Product, triggerEl: HTMLElement) => {
     lastFocusedRef.current = triggerEl;
     setModalProduct(product);
   };
   const closeProductModal = () => setModalProduct(null);
-
-  const updateQty = (id: string, delta: number) => {
-    setCartItems((prev) =>
-      prev
-        .map((i) => (i.id === id ? { ...i, quantity: Math.max(0, i.quantity + delta) } : i))
-        .filter((i) => i.quantity > 0)
-    );
-  };
-  const removeFromCart = (id: string) =>
-    setCartItems((prev) => prev.filter((i) => i.id !== id));
 
   const handleCheckout = async () => {
     setCheckoutLoading(true);
@@ -205,10 +179,10 @@ export default function ShopClient({ products }: { products: Product[] }) {
     const params = new URLSearchParams(window.location.search);
     if (params.get("order") === "success") {
       setOrderSuccess(true);
-      setCartItems([]);
+      clearCart();
       window.history.replaceState({}, "", "/shop");
     }
-  }, []);
+  }, [clearCart]);
 
   useEffect(() => {
     const header = document.querySelector(".header");
