@@ -20,6 +20,13 @@ const jost = Jost({
 export const metadata: Metadata = {
   title: "Somboun June — Premium Skincare",
   description: "Premium skincare and laser treatments by Somboun June, Winnipeg.",
+  icons: {
+    icon: [
+      { url: "/icon.png", type: "image/png" },
+    ],
+    shortcut: "/icon.png",
+    apple: "/icon.png",
+  },
 };
 
 export default function RootLayout({
