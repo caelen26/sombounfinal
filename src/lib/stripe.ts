@@ -1,4 +1,10 @@
 import Stripe from "stripe";
+import { unstable_cache } from "next/cache";
+
+// Cache tag for the Stripe product list. The webhook at /api/stripe/webhook
+// calls revalidateTag(PRODUCTS_CACHE_TAG) so product/price changes in Stripe
+// show up immediately instead of waiting for the time-based backstop.
+export const PRODUCTS_CACHE_TAG = "stripe-products";
 
 export type Product = {
   id: string;
@@ -11,6 +17,8 @@ export type Product = {
   priceId?: string;
   features?: string[];    // from Stripe metadata.features (pipe-separated)
   ingredients?: string[]; // from Stripe metadata.ingredients (pipe-separated)
+  featured?: boolean;     // from Stripe metadata.featured / bestseller
+  rank?: number;          // from Stripe metadata.rank (lower = higher priority)
 };
 
 const NUM_DESCRIPTION =
@@ -78,42 +86,62 @@ export function getStripe(): Stripe | null {
   return stripeClient;
 }
 
-export async function getProducts(): Promise<Product[]> {
+async function fetchProductsFromStripe(): Promise<Product[]> {
   const stripe = getStripe();
   if (!stripe) return fallbackProducts;
 
+  const { data } = await stripe.products.list({
+    active: true,
+    limit: 100,
+    expand: ["data.default_price"],
+  });
+
+  const mapped = data.map((p): Product => {
+    const price = p.default_price as Stripe.Price | null;
+    const amount = price?.unit_amount ? price.unit_amount / 100 : 0;
+    const currency = price?.currency ?? "cad";
+    const primaryImage = p.images[0] ?? "/refined-num-image.png";
+    return {
+      id: p.id,
+      name: p.name,
+      price: amount,
+      currency,
+      image: primaryImage,
+      images: p.images.length > 0 ? p.images : [primaryImage],
+      description: p.description ?? undefined,
+      priceId: price?.id,
+      features: p.metadata?.features
+        ? p.metadata.features.split("|").map((s) => s.trim()).filter(Boolean)
+        : undefined,
+      ingredients: p.metadata?.ingredients
+        ? p.metadata.ingredients.split("|").map((s) => s.trim()).filter(Boolean)
+        : undefined,
+      featured:
+        p.metadata?.featured === "true" || p.metadata?.bestseller === "true",
+      rank: parseInt(p.metadata?.rank ?? "999", 10),
+    };
+  });
+
+  return mapped.length > 0 ? mapped : fallbackProducts;
+}
+
+// Cache the Stripe product list in Next's Data Cache so we don't hit the Stripe
+// API on every request. Freshness is driven by the webhook (revalidateTag); the
+// 1-hour `revalidate` is only a backstop in case a webhook event is missed.
+const getCachedProducts = unstable_cache(
+  fetchProductsFromStripe,
+  ["stripe-products-list"],
+  { tags: [PRODUCTS_CACHE_TAG], revalidate: 3600 },
+);
+
+export async function getProducts(): Promise<Product[]> {
+  // Not configured → return the fallback directly without caching it.
+  if (!getStripe()) return fallbackProducts;
   try {
-    const { data } = await stripe.products.list({
-      active: true,
-      limit: 100,
-      expand: ["data.default_price"],
-    });
-
-    const mapped = data.map((p): Product => {
-      const price = p.default_price as Stripe.Price | null;
-      const amount = price?.unit_amount ? price.unit_amount / 100 : 0;
-      const currency = price?.currency ?? "cad";
-      const primaryImage = p.images[0] ?? "/refined-num-image.png";
-      return {
-        id: p.id,
-        name: p.name,
-        price: amount,
-        currency,
-        image: primaryImage,
-        images: p.images.length > 0 ? p.images : [primaryImage],
-        description: p.description ?? undefined,
-        priceId: price?.id,
-        features: p.metadata?.features
-          ? p.metadata.features.split("|").map((s) => s.trim()).filter(Boolean)
-          : undefined,
-        ingredients: p.metadata?.ingredients
-          ? p.metadata.ingredients.split("|").map((s) => s.trim()).filter(Boolean)
-          : undefined,
-      };
-    });
-
-    return mapped.length > 0 ? mapped : fallbackProducts;
+    return await getCachedProducts();
   } catch (err) {
+    // A transient Stripe error throws out of the cached fn (so the failure is
+    // NOT stored); serve the fallback for this request and retry next time.
     console.error("[Stripe] Failed to fetch products:", err);
     return fallbackProducts;
   }
