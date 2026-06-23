@@ -58,9 +58,20 @@ const fallbackProducts: Product[] = [
 
 let stripeClient: Stripe | null = null;
 
-function getStripe(): Stripe | null {
+/**
+ * Returns a configured Stripe client, or null when no usable key is present.
+ *
+ * Accepts standard secret keys (sk_live_/sk_test_) and — preferred for
+ * production — restricted keys (rk_live_/rk_test_). The regex guard means a
+ * placeholder value (e.g. "sk_REPLACE_ME") is treated as "not configured",
+ * so the app falls back to local product data instead of throwing.
+ *
+ * This key is read server-side only (no NEXT_PUBLIC_ prefix) and is never
+ * sent to the browser.
+ */
+export function getStripe(): Stripe | null {
   const key = process.env.STRIPE_SECRET_KEY;
-  if (!key || key.startsWith("sk_REPLACE")) return null;
+  if (!key || !/^(sk|rk)_(live|test)_/.test(key)) return null;
   if (!stripeClient) {
     stripeClient = new Stripe(key);
   }

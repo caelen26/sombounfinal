@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import Stripe from "stripe";
+import { getStripe } from "@/lib/stripe";
 
 export const dynamic = "force-dynamic";
 
@@ -32,8 +33,8 @@ const NUM_INGREDIENTS = [
 ];
 
 export async function GET() {
-  const key = process.env.STRIPE_SECRET_KEY;
-  if (!key || key.startsWith("sk_REPLACE")) {
+  const stripe = getStripe();
+  if (!stripe) {
     return NextResponse.json([
       {
         id: "num-body-tallow",
@@ -61,7 +62,6 @@ export async function GET() {
   }
 
   try {
-    const stripe = new Stripe(key);
     const { data } = await stripe.products.list({
       active: true,
       limit: 100,
