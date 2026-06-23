@@ -1257,22 +1257,21 @@ button { font: inherit; color: inherit; background: none; border: 0; cursor: poi
 }
 .ps-card-media {
   aspect-ratio: 1 / 1;
-  background: var(--cream-deep);
+  background: #fff;
   position: relative;
   overflow: hidden;
 }
 .ps-card-img {
-  position: absolute; inset: 0;
+  position: absolute; inset: 7%;
   background-size: contain;
   background-position: center;
   background-repeat: no-repeat;
-  transform: scale(1.65);
-  /* Pivot scaling around the bottle's natural location in the source photo
-     so the product stays visually centered in the card frame */
-  transform-origin: 50% 62%;
+  /* Show the whole product: `contain` fits the entire image inside the card,
+     with no upscale that would crop the bottle against the frame. The 7% inset
+     gives the product a little breathing room on its white backdrop. */
   transition: transform .5s cubic-bezier(0,.2,0,1);
 }
-.ps-card:hover .ps-card-img { transform: scale(1.72); }
+.ps-card:hover .ps-card-img { transform: scale(1.04); }
 .ps-card-foot {
   padding: 20px 24px 16px;
   display: flex;
@@ -1340,7 +1339,7 @@ button { font: inherit; color: inherit; background: none; border: 0; cursor: poi
 @media (prefers-reduced-motion: reduce) {
   .ps-card, .ps-card-img, .ps-card-cart { transition: none; }
   .ps-card:hover { transform: none; }
-  .ps-card:hover .ps-card-img { transform: scale(1.65); }
+  .ps-card:hover .ps-card-img { transform: none; }
 }
 
 /* ===========================================================
