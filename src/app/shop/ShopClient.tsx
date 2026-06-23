@@ -407,14 +407,20 @@ export default function ShopClient({ products }: { products: Product[] }) {
                       <div className="ps-card-price">{formatPrice(product)}</div>
                     </div>
                   </button>
-                  <button
-                    type="button"
-                    className={`ps-card-cart${addedFlashKey === cardKey ? " is-added" : ""}`}
-                    onClick={() => addToCart(product, "card")}
-                    aria-label={`Add ${product.name} to cart`}
-                  >
-                    {addedFlashKey === cardKey ? "Added ✓" : "Add to Cart"}
-                  </button>
+                  {product.stock !== undefined && product.stock <= 0 ? (
+                    <button type="button" className="ps-card-cart" disabled aria-label={`${product.name} is sold out`}>
+                      Sold Out
+                    </button>
+                  ) : (
+                    <button
+                      type="button"
+                      className={`ps-card-cart${addedFlashKey === cardKey ? " is-added" : ""}`}
+                      onClick={() => addToCart(product, "card")}
+                      aria-label={`Add ${product.name} to cart`}
+                    >
+                      {addedFlashKey === cardKey ? "Added ✓" : "Add to Cart"}
+                    </button>
+                  )}
                 </div>
               );
             })}
@@ -545,18 +551,24 @@ export default function ShopClient({ products }: { products: Product[] }) {
               <h2 id="pm-title" className="pm-title">{getProductName(modalProduct.name) || modalProduct.name}</h2>
               <div className="pm-price">{formatPrice(modalProduct)}</div>
 
-              <button
-                type="button"
-                className={`pm-cart${addedFlashKey === `modal:${modalProduct.id}` ? " is-added" : ""}`}
-                onClick={() => addToCart(modalProduct, "modal")}
-                aria-label={`Add ${modalProduct.name} to cart`}
-              >
-                {addedFlashKey === `modal:${modalProduct.id}` ? (
-                  <>Added to cart <span className="pm-cart-icon" aria-hidden="true">✓</span></>
-                ) : (
-                  <>Add to Cart <span className="pm-cart-icon" aria-hidden="true">→</span></>
-                )}
-              </button>
+              {modalProduct.stock !== undefined && modalProduct.stock <= 0 ? (
+                <button type="button" className="pm-cart" disabled aria-label={`${modalProduct.name} is sold out`}>
+                  Sold Out
+                </button>
+              ) : (
+                <button
+                  type="button"
+                  className={`pm-cart${addedFlashKey === `modal:${modalProduct.id}` ? " is-added" : ""}`}
+                  onClick={() => addToCart(modalProduct, "modal")}
+                  aria-label={`Add ${modalProduct.name} to cart`}
+                >
+                  {addedFlashKey === `modal:${modalProduct.id}` ? (
+                    <>Added to cart <span className="pm-cart-icon" aria-hidden="true">✓</span></>
+                  ) : (
+                    <>Add to Cart <span className="pm-cart-icon" aria-hidden="true">→</span></>
+                  )}
+                </button>
+              )}
 
               <div className="pm-accordion">
                 <div className={`pm-acc-item${detailsOpen ? " is-open" : ""}`}>

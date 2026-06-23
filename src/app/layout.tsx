@@ -19,8 +19,17 @@ const jost = Jost({
 });
 
 export const metadata: Metadata = {
+  metadataBase: new URL("https://sombounjunestudio.com"),
   title: "Somboun June — Premium Skincare",
   description: "Premium skincare and laser treatments by Somboun June, Winnipeg.",
+  applicationName: "Somboun June Studio",
+  openGraph: {
+    type: "website",
+    siteName: "Somboun June Studio",
+    title: "Somboun June — Premium Skincare",
+    description: "Premium skincare and laser treatments by Somboun June, Winnipeg.",
+    url: "https://sombounjunestudio.com",
+  },
   icons: {
     icon: [
       { url: "/icon.png", type: "image/png" },
@@ -38,6 +47,17 @@ export default function RootLayout({
   return (
     <html lang="en" className={`${cormorant.variable} ${jost.variable}`}>
       <body>
+        <script
+          type="application/ld+json"
+          dangerouslySetInnerHTML={{
+            __html: JSON.stringify({
+              "@context": "https://schema.org",
+              "@type": "WebSite",
+              name: "Somboun June Studio",
+              url: "https://sombounjunestudio.com",
+            }),
+          }}
+        />
         <CartProvider>{children}</CartProvider>
       </body>
     </html>

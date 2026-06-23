@@ -1331,6 +1331,11 @@ button { font: inherit; color: inherit; background: none; border: 0; cursor: poi
   box-shadow: 0 0 0 2px var(--cream), 0 0 0 4px var(--sage-deep);
 }
 .ps-card-cart.is-added { background: var(--sage); }
+.ps-card-cart:disabled, .pm-cart:disabled {
+  opacity: .45;
+  cursor: not-allowed;
+  pointer-events: none;
+}
 @media (max-width: 768px) {
   .ps-grid { grid-template-columns: 1fr; }
   .ps-card-foot { padding: 18px 20px 14px; }

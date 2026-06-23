@@ -19,6 +19,7 @@ export type Product = {
   ingredients?: string[]; // from Stripe metadata.ingredients (pipe-separated)
   featured?: boolean;     // from Stripe metadata.featured / bestseller
   rank?: number;          // from Stripe metadata.rank (lower = higher priority)
+  stock?: number;         // from Stripe metadata.inventory; undefined = not tracked (in stock)
 };
 
 const NUM_DESCRIPTION =
@@ -86,6 +87,14 @@ export function getStripe(): Stripe | null {
   return stripeClient;
 }
 
+// Inventory comes from a product's Stripe metadata `inventory` field (a number).
+// Missing/blank → undefined, which the UI treats as "in stock" (untracked).
+function parseStock(raw?: string): number | undefined {
+  if (raw === undefined || raw.trim() === "") return undefined;
+  const n = Number(raw);
+  return Number.isFinite(n) ? n : undefined;
+}
+
 async function fetchProductsFromStripe(): Promise<Product[]> {
   const stripe = getStripe();
   if (!stripe) return fallbackProducts;
@@ -119,6 +128,7 @@ async function fetchProductsFromStripe(): Promise<Product[]> {
       featured:
         p.metadata?.featured === "true" || p.metadata?.bestseller === "true",
       rank: parseInt(p.metadata?.rank ?? "999", 10),
+      stock: parseStock(p.metadata?.inventory),
     };
   });
 
