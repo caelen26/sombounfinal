@@ -66,6 +66,8 @@ const SORT_OPTIONS = [
 ] as const;
 type SortId = (typeof SORT_OPTIONS)[number]["id"];
 
+const TRENDING = ["Olaplex", "K18", "Kevin.Murphy", "Shampoo", "Tallow", "Serum"];
+
 // Collapsible section inside the filter drawer.
 function FilterSection({
   title, open, onToggle, children,
@@ -125,11 +127,9 @@ export default function ShopClient({ products }: { products: Product[] }) {
   const filteredProducts = products.filter((p) => {
     const brandMatch = activeBrands.length === 0 || activeBrands.includes(getBrand(p.name));
     const catMatch = activeCategory === "All" || getCategory(p.name) === activeCategory;
-    const q = searchQuery.trim().toLowerCase();
-    const searchMatch = !q || p.name.toLowerCase().includes(q);
     const stockMatch = !inStockOnly || p.stock === undefined || p.stock > 0;
     const priceMatch = !bucket || bucket.test(p.price);
-    return brandMatch && catMatch && searchMatch && stockMatch && priceMatch;
+    return brandMatch && catMatch && stockMatch && priceMatch;
   });
   const sortedProducts = [...filteredProducts].sort((a, b) => {
     if (sortBy === "price-asc") return a.price - b.price;
@@ -137,6 +137,18 @@ export default function ShopClient({ products }: { products: Product[] }) {
     if (sortBy === "name") return getProductName(a.name).localeCompare(getProductName(b.name));
     return 0;
   });
+
+  // Search is a standalone discovery popup (it doesn't filter the grid):
+  // empty query → featured recommendations; otherwise → name matches.
+  const searchResults = (() => {
+    const q = searchQuery.trim().toLowerCase();
+    if (!q) {
+      return [...products]
+        .sort((a, b) => (a.featured !== b.featured ? (a.featured ? -1 : 1) : (a.rank ?? 999) - (b.rank ?? 999)))
+        .slice(0, 8);
+    }
+    return products.filter((p) => p.name.toLowerCase().includes(q)).slice(0, 12);
+  })();
 
   const toggleBrand = (brand: string) =>
     setActiveBrands((prev) => prev.includes(brand) ? prev.filter((b) => b !== brand) : [...prev, brand]);
@@ -147,16 +159,16 @@ export default function ShopClient({ products }: { products: Product[] }) {
     (inStockOnly ? 1 : 0) +
     (priceBucket ? 1 : 0) +
     (sortBy !== "featured" ? 1 : 0);
-  const hasActiveFilters = activeFilterCount > 0 || searchQuery.trim() !== "";
+  const hasActiveFilters = activeFilterCount > 0;
   const clearFilters = () => {
-    setActiveCategory("All"); setActiveBrands([]); setSearchQuery("");
+    setActiveCategory("All"); setActiveBrands([]);
     setInStockOnly(false); setPriceBucket(null); setSortBy("featured");
   };
 
   // Reset visible count when filters change
   useEffect(() => {
     setVisibleCount(20);
-  }, [activeCategory, activeBrands, searchQuery, sortBy, inStockOnly, priceBucket]);
+  }, [activeCategory, activeBrands, sortBy, inStockOnly, priceBucket]);
 
   const visibleProducts = sortedProducts.slice(0, visibleCount);
   const hasMore = visibleCount < sortedProducts.length;
@@ -205,6 +217,15 @@ export default function ShopClient({ products }: { products: Product[] }) {
     document.body.style.overflow = filterOpen ? "hidden" : "";
     return () => { document.body.style.overflow = ""; };
   }, [filterOpen]);
+
+  useEffect(() => {
+    if (!searchOpen) return;
+    const prev = document.body.style.overflow;
+    document.body.style.overflow = "hidden";
+    const onKey = (e: KeyboardEvent) => { if (e.key === "Escape") setSearchOpen(false); };
+    window.addEventListener("keydown", onKey);
+    return () => { document.body.style.overflow = prev; window.removeEventListener("keydown", onKey); };
+  }, [searchOpen]);
 
   useEffect(() => {
     if (!modalOpen) return;
@@ -323,24 +344,65 @@ export default function ShopClient({ products }: { products: Product[] }) {
         </button>
       </header>
 
-      {/* ── Search bar (toggled from the nav search icon) ── */}
+      {/* ── Search overlay (full-screen popup with recommendations) ── */}
       {searchOpen && (
-        <div className="shop-searchbar" role="search">
-          <svg className="shop-searchbar-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
-            <circle cx="11" cy="11" r="7" /><path d="M20 20l-3.2-3.2" />
-          </svg>
-          <input
-            className="shop-searchbar-input"
-            type="search"
-            autoFocus
-            placeholder="Search products…"
-            value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
-            aria-label="Search products"
-          />
-          <button type="button" className="shop-searchbar-close" onClick={() => setSearchOpen(false)} aria-label="Close search">
+        <div className="search-overlay" role="dialog" aria-modal="true" aria-label="Search products">
+          <button type="button" className="search-overlay-close" onClick={() => setSearchOpen(false)} aria-label="Close search">
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" aria-hidden="true"><path d="M18 6L6 18M6 6l12 12" /></svg>
           </button>
+          <div className="search-overlay-inner">
+            <div className="search-overlay-logo">Somboun June</div>
+
+            <div className="search-field">
+              <svg className="search-field-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+                <circle cx="11" cy="11" r="7" /><path d="M20 20l-3.2-3.2" />
+              </svg>
+              <input
+                className="search-field-input"
+                type="search"
+                autoFocus
+                placeholder="Search for products, brands…"
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                aria-label="Search products"
+              />
+              {searchQuery && (
+                <button type="button" className="search-field-clear" onClick={() => setSearchQuery("")} aria-label="Clear search">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" aria-hidden="true"><path d="M18 6L6 18M6 6l12 12" /></svg>
+                </button>
+              )}
+            </div>
+
+            <div className="search-trending">
+              <span className="search-trending-label">Trending Searches</span>
+              {TRENDING.map((t) => (
+                <button key={t} type="button" className="search-trending-term" onClick={() => setSearchQuery(t)}>{t}</button>
+              ))}
+            </div>
+
+            <div className="search-results">
+              <div className="search-results-head">{searchQuery.trim() ? "Results" : "Popular Right Now"}</div>
+              {searchResults.length === 0 ? (
+                <p className="search-empty">No products match “{searchQuery.trim()}”.</p>
+              ) : (
+                <div className="search-rec-row">
+                  {searchResults.map((p) => (
+                    <button
+                      key={p.id}
+                      type="button"
+                      className="search-rec-card"
+                      onClick={(e) => { const t = e.currentTarget; setSearchOpen(false); openProductModal(p, t); }}
+                    >
+                      <div className="search-rec-img" style={{ backgroundImage: `url("${p.image}")` }} aria-hidden="true" />
+                      <div className="search-rec-brand">{getBrand(p.name)}</div>
+                      <div className="search-rec-name">{getProductName(p.name)}</div>
+                      <div className="search-rec-price">{formatPrice(p)}</div>
+                    </button>
+                  ))}
+                </div>
+              )}
+            </div>
+          </div>
         </div>
       )}
 
