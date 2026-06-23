@@ -11,6 +11,11 @@ type CartLine = {
   quantity: number;
 };
 
+// Countries you ship to. Add ISO codes to allow more at checkout,
+// e.g. ["CA", "US"] to also ship to the United States.
+const SHIP_TO_COUNTRIES: Stripe.Checkout.SessionCreateParams.ShippingAddressCollection["allowed_countries"] =
+  ["CA"];
+
 export async function POST(req: NextRequest) {
   const stripe = getStripe();
   if (!stripe) {
@@ -57,6 +62,13 @@ export async function POST(req: NextRequest) {
       payment_method_types: ["card"],
       line_items,
       mode: "payment",
+      // Require a billing address (helps card verification).
+      billing_address_collection: "required",
+      // Collect a shipping address for the physical products.
+      shipping_address_collection: { allowed_countries: SHIP_TO_COUNTRIES },
+      // Show a promo / discount code field on the checkout page. Codes are
+      // created in the Stripe Dashboard under Products → Coupons / Promotion codes.
+      allow_promotion_codes: true,
       success_url: `${origin}/shop?order=success`,
       cancel_url: `${origin}/shop`,
     });
