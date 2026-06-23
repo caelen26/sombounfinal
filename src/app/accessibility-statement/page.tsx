@@ -5,7 +5,7 @@ export const metadata: Metadata = {
   title: "Accessibility Statement | Somboun June",
   description:
     "Somboun June is committed to making our website accessible to all users. Read our WCAG 2.0 Level AA accessibility statement.",
-  alternates: { canonical: "https://sombounjune.com/accessibility-statement" },
+  alternates: { canonical: "https://sombounjunestudio.com/accessibility-statement" },
 };
 
 export default function AccessibilityStatement() {

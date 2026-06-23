@@ -5,7 +5,7 @@ export const metadata: Metadata = {
   title: "Privacy Policy | Somboun June",
   description:
     "Privacy Policy for Somboun June and NŪM Skincare. Learn how we collect, use, and protect your personal information.",
-  alternates: { canonical: "https://sombounjune.com/privacy-policy" },
+  alternates: { canonical: "https://sombounjunestudio.com/privacy-policy" },
 };
 
 export default function PrivacyPolicy() {
