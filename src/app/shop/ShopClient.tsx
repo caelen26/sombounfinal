@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useRef, useState, type ReactNode } from "react";
 import type { Product } from "@/lib/stripe";
 import { useCart } from "@/context/CartContext";
 import { parseDetails, parseIngredients } from "@/lib/productText";
@@ -52,6 +52,39 @@ function getProductName(name: string): string {
   return name;
 }
 
+const PRICE_BUCKETS: { id: string; label: string; test: (p: number) => boolean }[] = [
+  { id: "0-25", label: "Under $25", test: (p) => p < 25 },
+  { id: "25-50", label: "$25 – $50", test: (p) => p >= 25 && p < 50 },
+  { id: "50-100", label: "$50 – $100", test: (p) => p >= 50 && p < 100 },
+  { id: "100+", label: "$100+", test: (p) => p >= 100 },
+];
+const SORT_OPTIONS = [
+  { id: "featured", label: "Featured" },
+  { id: "price-asc", label: "Price: Low to High" },
+  { id: "price-desc", label: "Price: High to Low" },
+  { id: "name", label: "Name: A–Z" },
+] as const;
+type SortId = (typeof SORT_OPTIONS)[number]["id"];
+
+// Collapsible section inside the filter drawer.
+function FilterSection({
+  title, open, onToggle, children,
+}: {
+  title: string; open: boolean; onToggle: () => void; children: ReactNode;
+}) {
+  return (
+    <div className={`filter-section${open ? " is-open" : ""}`}>
+      <button type="button" className="filter-section-head" aria-expanded={open} onClick={onToggle}>
+        <span>{title}</span>
+        <svg className="filter-section-chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+          <path d="M6 9l6 6 6-6" />
+        </svg>
+      </button>
+      {open && <div className="filter-section-body">{children}</div>}
+    </div>
+  );
+}
+
 export default function ShopClient({ products }: { products: Product[] }) {
   const [menuOpen, setMenuOpen] = useState(false);
   const [modalProduct, setModalProduct] = useState<Product | null>(null);
@@ -70,6 +103,14 @@ export default function ShopClient({ products }: { products: Product[] }) {
   const [activeBrands, setActiveBrands] = useState<string[]>([]);
   const [searchQuery, setSearchQuery] = useState("");
   const [visibleCount, setVisibleCount] = useState(20);
+  const [sortBy, setSortBy] = useState<SortId>("featured");
+  const [inStockOnly, setInStockOnly] = useState(false);
+  const [priceBucket, setPriceBucket] = useState<string | null>(null);
+  const [filterOpen, setFilterOpen] = useState(false);
+  const [searchOpen, setSearchOpen] = useState(false);
+  const [showFilterPill, setShowFilterPill] = useState(false);
+  const [openSections, setOpenSections] = useState<Record<string, boolean>>({ category: true });
+  const toggleSection = (k: string) => setOpenSections((s) => ({ ...s, [k]: !s[k] }));
   const cartCloseRef = useRef<HTMLButtonElement | null>(null);
   const cartTriggerRef = useRef<HTMLElement | null>(null);
 
@@ -80,27 +121,45 @@ export default function ShopClient({ products }: { products: Product[] }) {
         const entry = BRAND_MAP.find(([, brand]) => brand === b);
         return entry?.[2] === activeCategory;
       });
+  const bucket = PRICE_BUCKETS.find((b) => b.id === priceBucket);
   const filteredProducts = products.filter((p) => {
     const brandMatch = activeBrands.length === 0 || activeBrands.includes(getBrand(p.name));
     const catMatch = activeCategory === "All" || getCategory(p.name) === activeCategory;
     const q = searchQuery.trim().toLowerCase();
     const searchMatch = !q || p.name.toLowerCase().includes(q);
-    return brandMatch && catMatch && searchMatch;
+    const stockMatch = !inStockOnly || p.stock === undefined || p.stock > 0;
+    const priceMatch = !bucket || bucket.test(p.price);
+    return brandMatch && catMatch && searchMatch && stockMatch && priceMatch;
+  });
+  const sortedProducts = [...filteredProducts].sort((a, b) => {
+    if (sortBy === "price-asc") return a.price - b.price;
+    if (sortBy === "price-desc") return b.price - a.price;
+    if (sortBy === "name") return getProductName(a.name).localeCompare(getProductName(b.name));
+    return 0;
   });
 
   const toggleBrand = (brand: string) =>
     setActiveBrands((prev) => prev.includes(brand) ? prev.filter((b) => b !== brand) : [...prev, brand]);
 
-  const hasActiveFilters = activeCategory !== "All" || activeBrands.length > 0 || searchQuery.trim() !== "";
-  const clearFilters = () => { setActiveCategory("All"); setActiveBrands([]); setSearchQuery(""); };
+  const activeFilterCount =
+    (activeCategory !== "All" ? 1 : 0) +
+    activeBrands.length +
+    (inStockOnly ? 1 : 0) +
+    (priceBucket ? 1 : 0) +
+    (sortBy !== "featured" ? 1 : 0);
+  const hasActiveFilters = activeFilterCount > 0 || searchQuery.trim() !== "";
+  const clearFilters = () => {
+    setActiveCategory("All"); setActiveBrands([]); setSearchQuery("");
+    setInStockOnly(false); setPriceBucket(null); setSortBy("featured");
+  };
 
   // Reset visible count when filters change
   useEffect(() => {
     setVisibleCount(20);
-  }, [activeCategory, activeBrands, searchQuery]);
+  }, [activeCategory, activeBrands, searchQuery, sortBy, inStockOnly, priceBucket]);
 
-  const visibleProducts = filteredProducts.slice(0, visibleCount);
-  const hasMore = visibleCount < filteredProducts.length;
+  const visibleProducts = sortedProducts.slice(0, visibleCount);
+  const hasMore = visibleCount < sortedProducts.length;
 
   const openProductModal = (product: Product, triggerEl: HTMLElement) => {
     lastFocusedRef.current = triggerEl;
@@ -141,6 +200,11 @@ export default function ShopClient({ products }: { products: Product[] }) {
     document.body.style.overflow = menuOpen ? "hidden" : "";
     return () => { document.body.style.overflow = ""; };
   }, [menuOpen]);
+
+  useEffect(() => {
+    document.body.style.overflow = filterOpen ? "hidden" : "";
+    return () => { document.body.style.overflow = ""; };
+  }, [filterOpen]);
 
   useEffect(() => {
     if (!modalOpen) return;
@@ -195,6 +259,7 @@ export default function ShopClient({ products }: { products: Product[] }) {
         requestAnimationFrame(() => {
           const y = window.scrollY;
           header?.classList.toggle("scrolled", y > 40);
+          setShowFilterPill(y > 280);
           if (y > lastY && y > 80) header?.classList.add("hidden");
           else header?.classList.remove("hidden");
           lastY = y;
@@ -226,6 +291,17 @@ export default function ShopClient({ products }: { products: Product[] }) {
         </nav>
         <div className="icon-row">
           <button
+            className="icon-btn"
+            aria-label="Search products"
+            aria-expanded={searchOpen}
+            onClick={() => setSearchOpen((s) => !s)}
+          >
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round">
+              <circle cx="11" cy="11" r="7" />
+              <path d="M20 20l-3.2-3.2" />
+            </svg>
+          </button>
+          <button
             className="icon-btn icon-btn-cart"
             aria-label={`Cart, ${cartCount} ${cartCount === 1 ? "item" : "items"}`}
             onClick={(e) => { cartTriggerRef.current = e.currentTarget; setCartOpen(true); }}
@@ -246,6 +322,27 @@ export default function ShopClient({ products }: { products: Product[] }) {
           <span /><span /><span />
         </button>
       </header>
+
+      {/* ── Search bar (toggled from the nav search icon) ── */}
+      {searchOpen && (
+        <div className="shop-searchbar" role="search">
+          <svg className="shop-searchbar-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+            <circle cx="11" cy="11" r="7" /><path d="M20 20l-3.2-3.2" />
+          </svg>
+          <input
+            className="shop-searchbar-input"
+            type="search"
+            autoFocus
+            placeholder="Search products…"
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+            aria-label="Search products"
+          />
+          <button type="button" className="shop-searchbar-close" onClick={() => setSearchOpen(false)} aria-label="Close search">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" aria-hidden="true"><path d="M18 6L6 18M6 6l12 12" /></svg>
+          </button>
+        </div>
+      )}
 
       {/* ── Mobile overlay ── */}
       <div className={`mobile-overlay${menuOpen ? " open" : ""}`} aria-hidden={!menuOpen}>
@@ -296,71 +393,6 @@ export default function ShopClient({ products }: { products: Product[] }) {
 
           {/* Sidebar + Grid */}
           <div className="shop-layout">
-
-            {/* Sidebar */}
-            <aside className="shop-sidebar">
-              <div className="shop-filter-box">
-                <div className="shop-filter-box-head">
-                  <span className="shop-filter-box-title">Filters</span>
-                  {hasActiveFilters && (
-                    <button className="shop-filter-clear" onClick={clearFilters}>Clear all</button>
-                  )}
-                </div>
-
-                <input
-                  className="shop-search"
-                  type="search"
-                  placeholder="Search products…"
-                  value={searchQuery}
-                  onChange={(e) => setSearchQuery(e.target.value)}
-                  aria-label="Search products"
-                />
-
-                <div className="shop-filter-section">
-                  <div className="shop-filter-label">Category</div>
-                  {CATEGORIES.filter((c) => c !== "All").map((cat) => (
-                    <label key={cat} className="shop-cb-row">
-                      <span className={`shop-cb${activeCategory === cat ? " is-checked" : ""}`} aria-hidden="true" />
-                      <input
-                        type="radio" name="category" value={cat}
-                        checked={activeCategory === cat}
-                        onChange={() => { setActiveCategory(cat); setActiveBrands([]); }}
-                        className="shop-cb-input" tabIndex={-1}
-                      />
-                      {cat}
-                    </label>
-                  ))}
-                  {activeCategory !== "All" && (
-                    <label className="shop-cb-row shop-cb-row--muted">
-                      <span className="shop-cb" aria-hidden="true" />
-                      <input type="radio" name="category" value="All" checked={false}
-                        onChange={() => { setActiveCategory("All"); setActiveBrands([]); }}
-                        className="shop-cb-input" tabIndex={-1}
-                      />
-                      Show all
-                    </label>
-                  )}
-                </div>
-
-                <div className="shop-filter-section">
-                  <div className="shop-filter-label">Brand</div>
-                  <div className="shop-filter-brand-list">
-                    {visibleBrands.map((brand) => (
-                      <label key={brand} className="shop-cb-row">
-                        <span className={`shop-cb${activeBrands.includes(brand) ? " is-checked" : ""}`} aria-hidden="true" />
-                        <input
-                          type="checkbox" value={brand}
-                          checked={activeBrands.includes(brand)}
-                          onChange={() => toggleBrand(brand)}
-                          className="shop-cb-input" tabIndex={-1}
-                        />
-                        {brand}
-                      </label>
-                    ))}
-                  </div>
-                </div>
-              </div>
-            </aside>
 
             {/* Product Grid */}
             <div className="shop-grid-col">
@@ -481,6 +513,99 @@ export default function ShopClient({ products }: { products: Product[] }) {
           <a className="subfoot-link" href="/privacy-policy">Privacy Policy</a>
         </div>
       </footer>
+
+      {/* ── Filters & Sort (floating pill + drawer) ── */}
+      <button
+        type="button"
+        className={`filter-fab${showFilterPill && !filterOpen ? " is-visible" : ""}`}
+        onClick={() => setFilterOpen(true)}
+        aria-haspopup="dialog"
+        aria-label="Open filters and sort"
+      >
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+          <line x1="4" y1="7" x2="14" y2="7" /><line x1="18" y1="7" x2="20" y2="7" /><circle cx="16" cy="7" r="2" />
+          <line x1="4" y1="12" x2="8" y2="12" /><line x1="12" y1="12" x2="20" y2="12" /><circle cx="10" cy="12" r="2" />
+          <line x1="4" y1="17" x2="12" y2="17" /><line x1="16" y1="17" x2="20" y2="17" /><circle cx="14" cy="17" r="2" />
+        </svg>
+        Filters &amp; Sort by
+        {activeFilterCount > 0 && <span className="filter-fab-count">{activeFilterCount}</span>}
+      </button>
+
+      {filterOpen && (
+        <div className="filter-overlay" onClick={(e) => { if (e.target === e.currentTarget) setFilterOpen(false); }}>
+          <aside className="filter-drawer" role="dialog" aria-modal="true" aria-label="Filter and sort products">
+            <header className="filter-drawer-head">
+              <h2 className="filter-drawer-title">Filter by</h2>
+              <button type="button" className="filter-drawer-close" onClick={() => setFilterOpen(false)} aria-label="Close filters">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" aria-hidden="true"><path d="M18 6L6 18M6 6l12 12" /></svg>
+              </button>
+            </header>
+
+            <div className="filter-drawer-body">
+              <div className="filter-toggles">
+                <div className="filter-toggle-row">
+                  <span>In Stock</span>
+                  <button
+                    type="button" role="switch" aria-checked={inStockOnly}
+                    className={`filter-switch${inStockOnly ? " is-on" : ""}`}
+                    onClick={() => setInStockOnly((v) => !v)}
+                    aria-label="Show in-stock products only"
+                  >
+                    <span className="filter-switch-knob" aria-hidden="true" />
+                  </button>
+                </div>
+              </div>
+
+              <FilterSection title="Category" open={!!openSections.category} onToggle={() => toggleSection("category")}>
+                {CATEGORIES.filter((c) => c !== "All").map((cat) => (
+                  <button key={cat} type="button" className="filter-opt"
+                    onClick={() => { setActiveCategory(activeCategory === cat ? "All" : cat); setActiveBrands([]); }}>
+                    <span className={`filter-cb${activeCategory === cat ? " is-checked" : ""}`} aria-hidden="true" />
+                    {cat}
+                  </button>
+                ))}
+              </FilterSection>
+
+              <FilterSection title="Brand" open={!!openSections.brand} onToggle={() => toggleSection("brand")}>
+                {visibleBrands.map((brand) => (
+                  <button key={brand} type="button" className="filter-opt" onClick={() => toggleBrand(brand)}>
+                    <span className={`filter-cb${activeBrands.includes(brand) ? " is-checked" : ""}`} aria-hidden="true" />
+                    {brand}
+                  </button>
+                ))}
+              </FilterSection>
+
+              <FilterSection title="Price Range" open={!!openSections.price} onToggle={() => toggleSection("price")}>
+                {PRICE_BUCKETS.map((b) => (
+                  <button key={b.id} type="button" className="filter-opt"
+                    onClick={() => setPriceBucket(priceBucket === b.id ? null : b.id)}>
+                    <span className={`filter-cb${priceBucket === b.id ? " is-checked" : ""}`} aria-hidden="true" />
+                    {b.label}
+                  </button>
+                ))}
+              </FilterSection>
+
+              <FilterSection title="Sort by" open={!!openSections.sort} onToggle={() => toggleSection("sort")}>
+                {SORT_OPTIONS.map((o) => (
+                  <button key={o.id} type="button" className="filter-opt" onClick={() => setSortBy(o.id)}>
+                    <span className={`filter-radio${sortBy === o.id ? " is-checked" : ""}`} aria-hidden="true" />
+                    {o.label}
+                  </button>
+                ))}
+              </FilterSection>
+            </div>
+
+            <footer className="filter-drawer-foot">
+              {hasActiveFilters && (
+                <button type="button" className="filter-clear" onClick={clearFilters}>Clear all</button>
+              )}
+              <button type="button" className="filter-show" onClick={() => setFilterOpen(false)}>
+                Show {sortedProducts.length} {sortedProducts.length === 1 ? "Product" : "Products"}
+              </button>
+            </footer>
+          </aside>
+        </div>
+      )}
 
       {/* ── Product Detail Modal ── */}
       {modalProduct && (
