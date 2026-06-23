@@ -6,6 +6,6 @@ export default function robots(): MetadataRoute.Robots {
       userAgent: "*",
       allow: "/",
     },
-    sitemap: "https://sombounjune.com/sitemap.xml",
+    sitemap: "https://sombounjunestudio.com/sitemap.xml",
   };
 }
