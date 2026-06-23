@@ -3,6 +3,7 @@
 import { useEffect, useRef, useState } from "react";
 import type { Product } from "@/lib/stripe";
 import { useCart } from "@/context/CartContext";
+import { parseDetails, parseIngredients } from "@/lib/productText";
 
 const RIMAN_URL =
   "https://mall.riman.com/member-ship/home?referrerCode=4007357701&utm_source=ig&utm_medium=social&utm_content=link_in_bio&fbclid=PAZXh0bgNhZW0CMTEAc3J0YwZhcHBfaWQPOTM2NjE5NzQzMzkyNDU5AAGnSzlvjf0O5Yyn99fFymE0Aky-MiXIB-0PzUTIDENClmui_dqi2nUpcTGlGEc_aem_a7CJKao6iWR6PtZ_yXHYNw";
@@ -55,7 +56,8 @@ export default function ShopClient({ products }: { products: Product[] }) {
   const [menuOpen, setMenuOpen] = useState(false);
   const [modalProduct, setModalProduct] = useState<Product | null>(null);
   const modalOpen = modalProduct !== null;
-  const [openAccordion, setOpenAccordion] = useState<"details" | "ingredients" | null>("details");
+  const [detailsOpen, setDetailsOpen] = useState(true);
+  const [ingredientsOpen, setIngredientsOpen] = useState(false);
   const [modalImageIdx, setModalImageIdx] = useState(0);
   const lastFocusedRef = useRef<HTMLElement | null>(null);
   const closeBtnRef = useRef<HTMLButtonElement | null>(null);
@@ -156,7 +158,7 @@ export default function ShopClient({ products }: { products: Product[] }) {
   }, [modalOpen]);
 
   useEffect(() => {
-    if (modalOpen) { setOpenAccordion("details"); setModalImageIdx(0); }
+    if (modalOpen) { setDetailsOpen(true); setIngredientsOpen(false); setModalImageIdx(0); }
   }, [modalOpen]);
 
   useEffect(() => {
@@ -557,36 +559,43 @@ export default function ShopClient({ products }: { products: Product[] }) {
               </button>
 
               <div className="pm-accordion">
-                <div className={`pm-acc-item${openAccordion === "details" ? " is-open" : ""}`}>
+                <div className={`pm-acc-item${detailsOpen ? " is-open" : ""}`}>
                   <button type="button" className="pm-acc-trigger"
-                    aria-expanded={openAccordion === "details"} aria-controls="pm-acc-details"
-                    onClick={() => setOpenAccordion(openAccordion === "details" ? null : "details")}>
+                    aria-expanded={detailsOpen} aria-controls="pm-acc-details"
+                    onClick={() => setDetailsOpen((o) => !o)}>
                     <span>Details</span>
-                    <span className="pm-acc-icon" aria-hidden="true">{openAccordion === "details" ? "−" : "+"}</span>
+                    <span className="pm-acc-icon" aria-hidden="true">{detailsOpen ? "−" : "+"}</span>
                   </button>
                   <div id="pm-acc-details" className="pm-acc-body" role="region">
-                    {modalProduct.description
-                      ? <p>{modalProduct.description}</p>
-                      : <p style={{ color: "var(--muted)", fontStyle: "italic" }}>Product details coming soon. Contact us for more information.</p>
-                    }
-                    {modalProduct.features && modalProduct.features.length > 0 && (
-                      <ul className="pm-acc-list">
-                        {modalProduct.features.map((f) => <li key={f}>{f}</li>)}
-                      </ul>
-                    )}
+                    {(() => {
+                      const { paragraphs, bullets } = parseDetails(modalProduct.description, modalProduct.features);
+                      if (paragraphs.length === 0 && bullets.length === 0) {
+                        return <p style={{ color: "var(--muted)", fontStyle: "italic" }}>Product details coming soon. Contact us for more information.</p>;
+                      }
+                      return (
+                        <>
+                          {paragraphs.map((p, i) => <p key={i}>{p}</p>)}
+                          {bullets.length > 0 && (
+                            <ul className="pm-acc-list">
+                              {bullets.map((b, i) => <li key={i}>{b}</li>)}
+                            </ul>
+                          )}
+                        </>
+                      );
+                    })()}
                   </div>
                 </div>
 
                 {modalProduct.ingredients && modalProduct.ingredients.length > 0 && (
-                  <div className={`pm-acc-item${openAccordion === "ingredients" ? " is-open" : ""}`}>
+                  <div className={`pm-acc-item${ingredientsOpen ? " is-open" : ""}`}>
                     <button type="button" className="pm-acc-trigger"
-                      aria-expanded={openAccordion === "ingredients"} aria-controls="pm-acc-ingredients"
-                      onClick={() => setOpenAccordion(openAccordion === "ingredients" ? null : "ingredients")}>
+                      aria-expanded={ingredientsOpen} aria-controls="pm-acc-ingredients"
+                      onClick={() => setIngredientsOpen((o) => !o)}>
                       <span>Ingredients</span>
-                      <span className="pm-acc-icon" aria-hidden="true">{openAccordion === "ingredients" ? "−" : "+"}</span>
+                      <span className="pm-acc-icon" aria-hidden="true">{ingredientsOpen ? "−" : "+"}</span>
                     </button>
                     <div id="pm-acc-ingredients" className="pm-acc-body" role="region">
-                      <p className="pm-ing-text">{modalProduct.ingredients.join(", ")}</p>
+                      <p className="pm-ing-text">{parseIngredients(modalProduct.ingredients).join(", ")}</p>
                     </div>
                   </div>
                 )}
