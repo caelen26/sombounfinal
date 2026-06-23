@@ -66,6 +66,9 @@ export async function POST(req: NextRequest) {
       billing_address_collection: "required",
       // Collect a shipping address for the physical products.
       shipping_address_collection: { allowed_countries: SHIP_TO_COUNTRIES },
+      // Collect a phone number. (Email is always required by Checkout, and the
+      // customer's name is captured with the billing/shipping address above.)
+      phone_number_collection: { enabled: true },
       // Show a promo / discount code field on the checkout page. Codes are
       // created in the Stripe Dashboard under Products → Coupons / Promotion codes.
       allow_promotion_codes: true,
