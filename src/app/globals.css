@@ -2763,6 +2763,15 @@ button { font: inherit; color: inherit; background: none; border: 0; cursor: poi
 }
 .brand-tile--big .brand-tile-foot { padding: 22px 24px; }
 .brand-tile--big .brand-tile-name { font-size: clamp(24px, 2.6vw, 34px); }
+/* "Shop All" tile: dark scrim + light text so it reads as the primary CTA. */
+.brand-tile--all .brand-tile-foot {
+  background: linear-gradient(to top,
+    rgba(26,24,20,.82) 0%,
+    rgba(26,24,20,.4) 45%,
+    rgba(26,24,20,0) 100%);
+}
+.brand-tile--all .brand-tile-name { color: #fff; }
+.brand-tile--all .brand-tile-kicker { color: rgba(255,255,255,.82); }
 
 @media (max-width: 900px) {
   .brand-grid { grid-template-columns: repeat(2, 1fr); }

@@ -14,6 +14,7 @@ const BRAND_MAP: [string, string, string][] = [
   ["Schwarzkopf Professional", "Schwarzkopf Professional", "Hair Care"],
   ["Kevin.Murphy + Color.Me", "Kevin Murphy", "Hair Care"],
   ["Kevin.Murphy", "Kevin Murphy", "Hair Care"],
+  ["Kevin Murphy", "Kevin Murphy", "Hair Care"],
   ["Living Proof", "Living Proof", "Hair Care"],
   ["Color Wow", "Color Wow", "Hair Care"],
   ["iS Clinical", "iS Clinical", "Skin Care"],
@@ -36,21 +37,30 @@ const CATEGORIES = ["All", "Hair Care", "Skin Care", "Body Care", "Wellness"];
 // Brands rendered as oversized "Featured" tiles on the brand landing.
 const FEATURED_BRANDS = ["Kevin Murphy", "iS Clinical", "Unite"];
 
+// Sentinel for the "Shop All" tile / view (browse the whole catalogue).
+const ALL_VIEW = "__all__";
+
+// Case-insensitive prefix test, so "Kevin Murphy", "kevin murphy" and
+// "KEVIN.MURPHY" all match the same brand regardless of how Stripe capitalises
+// the product name. (Matched length == prefix length, so slicing stays valid.)
+function matchesPrefix(name: string, prefix: string): boolean {
+  return name.slice(0, prefix.length).toLowerCase() === prefix.toLowerCase();
+}
 function getBrand(name: string): string {
   for (const [prefix, brand] of BRAND_MAP) {
-    if (name.startsWith(prefix)) return brand;
+    if (matchesPrefix(name, prefix)) return brand;
   }
   return "Other";
 }
 function getCategory(name: string): string {
   for (const [prefix, , cat] of BRAND_MAP) {
-    if (name.startsWith(prefix)) return cat;
+    if (matchesPrefix(name, prefix)) return cat;
   }
   return "Other";
 }
 function getProductName(name: string): string {
   for (const [prefix] of BRAND_MAP) {
-    if (name.startsWith(prefix)) return name.slice(prefix.length).trim();
+    if (matchesPrefix(name, prefix)) return name.slice(prefix.length).trim();
   }
   return name;
 }
@@ -178,19 +188,19 @@ export default function ShopClient({ products }: { products: Product[] }) {
   // alternating left/right and spaced through the rest so they don't stack.
   const brandTiles = useMemo(() => {
     const featured = FEATURED_BRANDS.filter((b) => allBrands.includes(b));
-    if (featured.length === 0) {
-      return allBrands.map((b) => ({ brand: b, big: false, side: "left" as const }));
-    }
     const rest = allBrands.filter((b) => !featured.includes(b));
-    const per = Math.ceil(rest.length / featured.length);
-    const tiles: { brand: string; big: boolean; side: "left" | "right" }[] = [];
-    featured.forEach((fb, i) => {
-      tiles.push({ brand: fb, big: true, side: i % 2 === 0 ? "left" : "right" });
-      rest.slice(i * per, (i + 1) * per).forEach((b) =>
-        tiles.push({ brand: b, big: false, side: "left" }));
+    // Big tiles: "Shop All" first, then the featured brands — sides alternate
+    // and are spaced through the rest so the big tiles don't stack in a column.
+    const bigs = [ALL_VIEW, ...featured];
+    const per = rest.length ? Math.ceil(rest.length / bigs.length) : 0;
+    const tiles: { brand: string; big: boolean; side: "left" | "right"; all: boolean }[] = [];
+    bigs.forEach((b, i) => {
+      tiles.push({ brand: b, big: true, side: i % 2 === 0 ? "left" : "right", all: b === ALL_VIEW });
+      rest.slice(i * per, (i + 1) * per).forEach((r) =>
+        tiles.push({ brand: r, big: false, side: "left", all: false }));
     });
-    rest.slice(per * featured.length).forEach((b) =>
-      tiles.push({ brand: b, big: false, side: "left" }));
+    rest.slice(per * bigs.length).forEach((r) =>
+      tiles.push({ brand: r, big: false, side: "left", all: false }));
     return tiles;
   }, [allBrands]);
 
@@ -206,6 +216,13 @@ export default function ShopClient({ products }: { products: Product[] }) {
       if (best) covers[brand] = best.image;
     });
     return covers;
+  }, [products]);
+
+  // Cover for the "Shop All" tile: the single best seller across the catalogue.
+  const overallCover = useMemo(() => {
+    const best = [...products].sort((a, b) =>
+      a.featured !== b.featured ? (a.featured ? -1 : 1) : (a.rank ?? 999) - (b.rank ?? 999))[0];
+    return best?.image ?? "";
   }, [products]);
   const bucket = PRICE_BUCKETS.find((b) => b.id === priceBucket);
   const filteredProducts = products.filter((p) => {
@@ -243,10 +260,15 @@ export default function ShopClient({ products }: { products: Product[] }) {
       .map((x) => x.p);
   })();
 
-  // Brand is the page context (not a filter), so it isn't counted here and
-  // "Clear all" leaves it intact — you switch brands via "← All Brands".
+  const toggleBrand = (brand: string) =>
+    setActiveBrands((prev) => prev.includes(brand) ? prev.filter((b) => b !== brand) : [...prev, brand]);
+
+  // In the "Shop All" view, Brand is a real (multi-select) filter; inside a
+  // single brand it's the fixed page context, so it isn't counted there and
+  // "Clear all" leaves it intact (you switch brands via "← All Brands").
   const activeFilterCount =
     (activeCategory !== "All" ? 1 : 0) +
+    (selectedBrand === ALL_VIEW ? activeBrands.length : 0) +
     (inStockOnly ? 1 : 0) +
     (priceBucket ? 1 : 0) +
     (sortBy !== "featured" ? 1 : 0);
@@ -254,6 +276,7 @@ export default function ShopClient({ products }: { products: Product[] }) {
   const clearFilters = () => {
     setActiveCategory("All");
     setInStockOnly(false); setPriceBucket(null); setSortBy("featured");
+    if (selectedBrand === ALL_VIEW) setActiveBrands([]);
   };
   const selectBrand = (brand: string) => {
     setSelectedBrand(brand);
@@ -268,6 +291,14 @@ export default function ShopClient({ products }: { products: Product[] }) {
     setActiveBrands([]);
     clearFilters();
     window.history.pushState({}, "", "/shop");
+    window.scrollTo({ top: 0 });
+  };
+  const selectAll = () => {
+    setSelectedBrand(ALL_VIEW);
+    setActiveBrands([]);
+    setActiveCategory("All"); setSortBy("featured");
+    setInStockOnly(false); setPriceBucket(null);
+    window.history.pushState({}, "", "/shop?view=all");
     window.scrollTo({ top: 0 });
   };
 
@@ -399,16 +430,18 @@ export default function ShopClient({ products }: { products: Product[] }) {
     return () => window.removeEventListener("scroll", onScroll);
   }, []);
 
-  // Sync the selected brand with the ?brand= URL (deep-link + back/forward nav).
+  // Sync the view with the URL (?view=all or ?brand=) for deep links + back/fwd.
   useEffect(() => {
-    const readBrand = () => {
-      const b = new URLSearchParams(window.location.search).get("brand");
+    const readView = () => {
+      const params = new URLSearchParams(window.location.search);
+      if (params.get("view") === "all") { setSelectedBrand(ALL_VIEW); setActiveBrands([]); return; }
+      const b = params.get("brand");
       if (b && allBrands.includes(b)) { setSelectedBrand(b); setActiveBrands([b]); }
       else { setSelectedBrand(null); }
     };
-    readBrand();
-    window.addEventListener("popstate", readBrand);
-    return () => window.removeEventListener("popstate", readBrand);
+    readView();
+    window.addEventListener("popstate", readView);
+    return () => window.removeEventListener("popstate", readView);
   }, [allBrands]);
 
   const formatPrice = (product: Product) => {
@@ -565,7 +598,7 @@ export default function ShopClient({ products }: { products: Product[] }) {
             <div className="shop-eyebrow">Somboun June</div>
             <h1 className="shop-h1">
               {selectedBrand ? (
-                selectedBrand
+                selectedBrand === ALL_VIEW ? "All Products" : selectedBrand
               ) : (
                 <>Shop<span className="shop-h1-sub">by Brand</span></>
               )}
@@ -658,25 +691,28 @@ export default function ShopClient({ products }: { products: Product[] }) {
           </div>
           ) : (
             <div className="brand-grid" aria-label="Brands">
-              {brandTiles.map((t) => (
+              {brandTiles.map((t) => {
+                const cover = t.all ? overallCover : brandCovers[t.brand];
+                return (
                 <button
                   key={t.brand}
                   type="button"
-                  className={`brand-tile${t.big ? ` brand-tile--big is-${t.side}` : ""}`}
-                  onClick={() => selectBrand(t.brand)}
-                  aria-label={`View ${t.brand} products`}
+                  className={`brand-tile${t.big ? ` brand-tile--big is-${t.side}` : ""}${t.all ? " brand-tile--all" : ""}`}
+                  onClick={() => (t.all ? selectAll() : selectBrand(t.brand))}
+                  aria-label={t.all ? "View all products" : `View ${t.brand} products`}
                 >
                   <div
                     className="brand-tile-img"
-                    style={brandCovers[t.brand] ? { backgroundImage: `url("${brandCovers[t.brand]}")` } : undefined}
+                    style={cover ? { backgroundImage: `url("${cover}")` } : undefined}
                     aria-hidden="true"
                   />
                   <div className="brand-tile-foot">
-                    {t.big && <span className="brand-tile-kicker">Featured</span>}
-                    <span className="brand-tile-name">{t.brand}</span>
+                    {t.big && <span className="brand-tile-kicker">{t.all ? "Everything" : "Featured"}</span>}
+                    <span className="brand-tile-name">{t.all ? "Shop All" : t.brand}</span>
                   </div>
                 </button>
-              ))}
+                );
+              })}
             </div>
           )}
         </div>
@@ -774,6 +810,17 @@ export default function ShopClient({ products }: { products: Product[] }) {
                   </button>
                 ))}
               </FilterSection>
+
+              {selectedBrand === ALL_VIEW && (
+                <FilterSection title="Brand" open={!!openSections.brand} onToggle={() => toggleSection("brand")}>
+                  {allBrands.map((brand) => (
+                    <button key={brand} type="button" className="filter-opt" onClick={() => toggleBrand(brand)}>
+                      <span className={`filter-cb${activeBrands.includes(brand) ? " is-checked" : ""}`} aria-hidden="true" />
+                      {brand}
+                    </button>
+                  ))}
+                </FilterSection>
+              )}
 
               <FilterSection title="Price Range" open={!!openSections.price} onToggle={() => toggleSection("price")}>
                 {PRICE_BUCKETS.map((b) => (
