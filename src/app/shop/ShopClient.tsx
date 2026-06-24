@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useRef, useState, type ReactNode } from "react";
+import { useEffect, useMemo, useRef, useState, type ReactNode } from "react";
 import type { Product } from "@/lib/stripe";
 import { useCart } from "@/context/CartContext";
 import { parseDetails, parseIngredients } from "@/lib/productText";
@@ -12,8 +12,8 @@ const RIMAN_URL =
 // Ordered longest-first to prevent partial matches
 const BRAND_MAP: [string, string, string][] = [
   ["Schwarzkopf Professional", "Schwarzkopf Professional", "Hair Care"],
-  ["Kevin.Murphy + Color.Me", "Kevin.Murphy", "Hair Care"],
-  ["Kevin.Murphy", "Kevin.Murphy", "Hair Care"],
+  ["Kevin.Murphy + Color.Me", "Kevin Murphy", "Hair Care"],
+  ["Kevin.Murphy", "Kevin Murphy", "Hair Care"],
   ["Living Proof", "Living Proof", "Hair Care"],
   ["Color Wow", "Color Wow", "Hair Care"],
   ["iS Clinical", "iS Clinical", "Skin Care"],
@@ -33,6 +33,9 @@ const BRAND_MAP: [string, string, string][] = [
 ];
 const CATEGORIES = ["All", "Hair Care", "Skin Care", "Body Care", "Wellness"];
 
+// Brands rendered as oversized "Featured" tiles on the brand landing.
+const FEATURED_BRANDS = ["Kevin Murphy", "iS Clinical", "Unite"];
+
 function getBrand(name: string): string {
   for (const [prefix, brand] of BRAND_MAP) {
     if (name.startsWith(prefix)) return brand;
@@ -50,6 +53,56 @@ function getProductName(name: string): string {
     if (name.startsWith(prefix)) return name.slice(prefix.length).trim();
   }
   return name;
+}
+
+// Levenshtein edit distance, for typo-tolerant ("did you mean") matching.
+function editDistance(a: string, b: string): number {
+  const m = a.length, n = b.length;
+  if (m === 0) return n;
+  if (n === 0) return m;
+  let prev = Array.from({ length: n + 1 }, (_, i) => i);
+  let cur = new Array<number>(n + 1).fill(0);
+  for (let i = 1; i <= m; i++) {
+    cur[0] = i;
+    for (let j = 1; j <= n; j++) {
+      const cost = a[i - 1] === b[j - 1] ? 0 : 1;
+      cur[j] = Math.min(prev[j] + 1, cur[j - 1] + 1, prev[j - 1] + cost);
+    }
+    [prev, cur] = [cur, prev];
+  }
+  return prev[n];
+}
+
+// Score a product against query tokens across name / brand / ingredients /
+// features / description. Lower = better match; null = no match. Exact and
+// substring hits beat fuzzy ones, and earlier fields outrank later ones, so
+// a name match ranks above an ingredient match (e.g. "beef tallow" → NŪM).
+function searchScore(p: Product, tokens: string[]): number | null {
+  const fields: { text: string; weight: number; fuzzy: boolean }[] = [
+    { text: getProductName(p.name).toLowerCase(), weight: 0, fuzzy: true },
+    { text: getBrand(p.name).toLowerCase(), weight: 1, fuzzy: true },
+    { text: (p.ingredients ?? []).join(" ").toLowerCase(), weight: 2, fuzzy: true },
+    { text: (p.features ?? []).join(" ").toLowerCase(), weight: 3, fuzzy: false },
+    { text: (p.description ?? "").toLowerCase(), weight: 4, fuzzy: false },
+  ];
+  let total = 0;
+  for (const token of tokens) {
+    let best = Infinity;
+    for (const f of fields) {
+      if (!f.text) continue;
+      if (f.text.includes(token)) { best = Math.min(best, f.weight); continue; }
+      if (f.fuzzy && token.length >= 3) {
+        const tol = token.length <= 4 ? 1 : 2;
+        for (const w of f.text.split(/[^a-z0-9]+/)) {
+          if (!w || Math.abs(w.length - token.length) > tol) continue;
+          if (editDistance(w, token) <= tol) { best = Math.min(best, f.weight + 5); break; }
+        }
+      }
+    }
+    if (best === Infinity) return null; // a token matched nothing → drop product
+    total += best;
+  }
+  return total;
 }
 
 const PRICE_BUCKETS: { id: string; label: string; test: (p: number) => boolean }[] = [
@@ -103,6 +156,7 @@ export default function ShopClient({ products }: { products: Product[] }) {
   const [orderSuccess, setOrderSuccess] = useState(false);
   const [activeCategory, setActiveCategory] = useState("All");
   const [activeBrands, setActiveBrands] = useState<string[]>([]);
+  const [selectedBrand, setSelectedBrand] = useState<string | null>(null);
   const [searchQuery, setSearchQuery] = useState("");
   const [visibleCount, setVisibleCount] = useState(20);
   const [sortBy, setSortBy] = useState<SortId>("featured");
@@ -116,13 +170,43 @@ export default function ShopClient({ products }: { products: Product[] }) {
   const cartCloseRef = useRef<HTMLButtonElement | null>(null);
   const cartTriggerRef = useRef<HTMLElement | null>(null);
 
-  const allBrands = Array.from(new Set(products.map((p) => getBrand(p.name)))).sort();
-  const visibleBrands = activeCategory === "All"
-    ? allBrands
-    : allBrands.filter((b) => {
-        const entry = BRAND_MAP.find(([, brand]) => brand === b);
-        return entry?.[2] === activeCategory;
-      });
+  const allBrands = useMemo(
+    () => Array.from(new Set(products.map((p) => getBrand(p.name)))).sort(),
+    [products],
+  );
+  // Ordered tiles for the brand landing: featured brands become big tiles,
+  // alternating left/right and spaced through the rest so they don't stack.
+  const brandTiles = useMemo(() => {
+    const featured = FEATURED_BRANDS.filter((b) => allBrands.includes(b));
+    if (featured.length === 0) {
+      return allBrands.map((b) => ({ brand: b, big: false, side: "left" as const }));
+    }
+    const rest = allBrands.filter((b) => !featured.includes(b));
+    const per = Math.ceil(rest.length / featured.length);
+    const tiles: { brand: string; big: boolean; side: "left" | "right" }[] = [];
+    featured.forEach((fb, i) => {
+      tiles.push({ brand: fb, big: true, side: i % 2 === 0 ? "left" : "right" });
+      rest.slice(i * per, (i + 1) * per).forEach((b) =>
+        tiles.push({ brand: b, big: false, side: "left" }));
+    });
+    rest.slice(per * featured.length).forEach((b) =>
+      tiles.push({ brand: b, big: false, side: "left" }));
+    return tiles;
+  }, [allBrands]);
+
+  // Brand cover = the image of that brand's best seller (featured first, then
+  // lowest rank). Auto-derived from the catalog, so covers track Stripe.
+  const brandCovers = useMemo(() => {
+    const byBrand: Record<string, Product[]> = {};
+    products.forEach((p) => { (byBrand[getBrand(p.name)] ??= []).push(p); });
+    const covers: Record<string, string> = {};
+    Object.entries(byBrand).forEach(([brand, list]) => {
+      const best = [...list].sort((a, b) =>
+        a.featured !== b.featured ? (a.featured ? -1 : 1) : (a.rank ?? 999) - (b.rank ?? 999))[0];
+      if (best) covers[brand] = best.image;
+    });
+    return covers;
+  }, [products]);
   const bucket = PRICE_BUCKETS.find((b) => b.id === priceBucket);
   const filteredProducts = products.filter((p) => {
     const brandMatch = activeBrands.length === 0 || activeBrands.includes(getBrand(p.name));
@@ -147,22 +231,44 @@ export default function ShopClient({ products }: { products: Product[] }) {
         .sort((a, b) => (a.featured !== b.featured ? (a.featured ? -1 : 1) : (a.rank ?? 999) - (b.rank ?? 999)))
         .slice(0, 8);
     }
-    return products.filter((p) => p.name.toLowerCase().includes(q)).slice(0, 12);
+    const tokens = q.split(/[^a-z0-9]+/).filter(Boolean);
+    if (tokens.length === 0) return [];
+    return products
+      .map((p) => ({ p, score: searchScore(p, tokens) }))
+      .filter((x): x is { p: Product; score: number } => x.score !== null)
+      .sort((a, b) =>
+        a.score - b.score ||
+        (a.p.featured !== b.p.featured ? (a.p.featured ? -1 : 1) : (a.p.rank ?? 999) - (b.p.rank ?? 999)))
+      .slice(0, 12)
+      .map((x) => x.p);
   })();
 
-  const toggleBrand = (brand: string) =>
-    setActiveBrands((prev) => prev.includes(brand) ? prev.filter((b) => b !== brand) : [...prev, brand]);
-
+  // Brand is the page context (not a filter), so it isn't counted here and
+  // "Clear all" leaves it intact — you switch brands via "← All Brands".
   const activeFilterCount =
     (activeCategory !== "All" ? 1 : 0) +
-    activeBrands.length +
     (inStockOnly ? 1 : 0) +
     (priceBucket ? 1 : 0) +
     (sortBy !== "featured" ? 1 : 0);
   const hasActiveFilters = activeFilterCount > 0;
   const clearFilters = () => {
-    setActiveCategory("All"); setActiveBrands([]);
+    setActiveCategory("All");
     setInStockOnly(false); setPriceBucket(null); setSortBy("featured");
+  };
+  const selectBrand = (brand: string) => {
+    setSelectedBrand(brand);
+    setActiveBrands([brand]);
+    setActiveCategory("All"); setSortBy("featured");
+    setInStockOnly(false); setPriceBucket(null);
+    window.history.pushState({}, "", `/shop?brand=${encodeURIComponent(brand)}`);
+    window.scrollTo({ top: 0 });
+  };
+  const backToBrands = () => {
+    setSelectedBrand(null);
+    setActiveBrands([]);
+    clearFilters();
+    window.history.pushState({}, "", "/shop");
+    window.scrollTo({ top: 0 });
   };
 
   // Reset visible count when filters change
@@ -293,6 +399,18 @@ export default function ShopClient({ products }: { products: Product[] }) {
     return () => window.removeEventListener("scroll", onScroll);
   }, []);
 
+  // Sync the selected brand with the ?brand= URL (deep-link + back/forward nav).
+  useEffect(() => {
+    const readBrand = () => {
+      const b = new URLSearchParams(window.location.search).get("brand");
+      if (b && allBrands.includes(b)) { setSelectedBrand(b); setActiveBrands([b]); }
+      else { setSelectedBrand(null); }
+    };
+    readBrand();
+    window.addEventListener("popstate", readBrand);
+    return () => window.removeEventListener("popstate", readBrand);
+  }, [allBrands]);
+
   const formatPrice = (product: Product) => {
     const currency = (product.currency ?? "cad").toUpperCase();
     return `${currency}$ ${product.price.toFixed(2)}`;
@@ -361,7 +479,7 @@ export default function ShopClient({ products }: { products: Product[] }) {
                 className="search-field-input"
                 type="search"
                 autoFocus
-                placeholder="Search for products, brands…"
+                placeholder="Search products, brands, ingredients…"
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
                 aria-label="Search products"
@@ -439,21 +557,25 @@ export default function ShopClient({ products }: { products: Product[] }) {
 
           {/* Editorial header */}
           <div className="shop-header">
+            {selectedBrand && (
+              <button type="button" className="shop-back" onClick={backToBrands}>
+                <span aria-hidden="true">←</span> All Brands
+              </button>
+            )}
             <div className="shop-eyebrow">Somboun June</div>
             <h1 className="shop-h1">
-              {activeBrands.length === 1 ? (
-                activeBrands[0]
-              ) : activeCategory !== "All" ? (
-                activeCategory
+              {selectedBrand ? (
+                selectedBrand
               ) : (
-                <>Shop<span className="shop-h1-sub">All Products</span></>
+                <>Shop<span className="shop-h1-sub">by Brand</span></>
               )}
             </h1>
           </div>
 
           <div className="shop-rule" aria-hidden="true" />
 
-          {/* Sidebar + Grid */}
+          {selectedBrand ? (
+          /* Selected brand -> product grid */
           <div className="shop-layout">
 
             {/* Product Grid */}
@@ -533,7 +655,30 @@ export default function ShopClient({ products }: { products: Product[] }) {
                 </div>
               )}
             </div>
-          </div>{/* end shop-layout */}
+          </div>
+          ) : (
+            <div className="brand-grid" aria-label="Brands">
+              {brandTiles.map((t) => (
+                <button
+                  key={t.brand}
+                  type="button"
+                  className={`brand-tile${t.big ? ` brand-tile--big is-${t.side}` : ""}`}
+                  onClick={() => selectBrand(t.brand)}
+                  aria-label={`View ${t.brand} products`}
+                >
+                  <div
+                    className="brand-tile-img"
+                    style={brandCovers[t.brand] ? { backgroundImage: `url("${brandCovers[t.brand]}")` } : undefined}
+                    aria-hidden="true"
+                  />
+                  <div className="brand-tile-foot">
+                    {t.big && <span className="brand-tile-kicker">Featured</span>}
+                    <span className="brand-tile-name">{t.brand}</span>
+                  </div>
+                </button>
+              ))}
+            </div>
+          )}
         </div>
       </main>
 
@@ -581,7 +726,7 @@ export default function ShopClient({ products }: { products: Product[] }) {
       {/* ── Filters & Sort (floating pill + drawer) ── */}
       <button
         type="button"
-        className={`filter-fab${showFilterPill && !filterOpen ? " is-visible" : ""}`}
+        className={`filter-fab${selectedBrand && showFilterPill && !filterOpen ? " is-visible" : ""}`}
         onClick={() => setFilterOpen(true)}
         aria-haspopup="dialog"
         aria-label="Open filters and sort"
@@ -623,18 +768,9 @@ export default function ShopClient({ products }: { products: Product[] }) {
               <FilterSection title="Category" open={!!openSections.category} onToggle={() => toggleSection("category")}>
                 {CATEGORIES.filter((c) => c !== "All").map((cat) => (
                   <button key={cat} type="button" className="filter-opt"
-                    onClick={() => { setActiveCategory(activeCategory === cat ? "All" : cat); setActiveBrands([]); }}>
+                    onClick={() => setActiveCategory(activeCategory === cat ? "All" : cat)}>
                     <span className={`filter-cb${activeCategory === cat ? " is-checked" : ""}`} aria-hidden="true" />
                     {cat}
-                  </button>
-                ))}
-              </FilterSection>
-
-              <FilterSection title="Brand" open={!!openSections.brand} onToggle={() => toggleSection("brand")}>
-                {visibleBrands.map((brand) => (
-                  <button key={brand} type="button" className="filter-opt" onClick={() => toggleBrand(brand)}>
-                    <span className={`filter-cb${activeBrands.includes(brand) ? " is-checked" : ""}`} aria-hidden="true" />
-                    {brand}
                   </button>
                 ))}
               </FilterSection>
