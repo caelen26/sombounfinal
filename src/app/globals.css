@@ -1228,33 +1228,21 @@ button { font: inherit; color: inherit; background: none; border: 0; cursor: poi
   position: relative;
   display: flex;
   flex-direction: column;
-  background: var(--cream);
-  border-radius: 18px;
+  background: #fbf9f5;
+  border-radius: 14px;
   overflow: hidden;
-  border: 1px solid transparent;
-  transition: box-shadow .28s cubic-bezier(0,.2,0,1),
-              transform   .28s cubic-bezier(0,.2,0,1),
-              border-color .2s ease;
+  border: 1px solid rgba(26,24,20,.06);
+  box-shadow: 0 1px 2px rgba(26,24,20,.04);
+  transition: box-shadow .45s cubic-bezier(.16,1,.3,1),
+              transform   .45s cubic-bezier(.16,1,.3,1);
   width: 100%;
 }
 .ps-card:hover {
-  box-shadow: 0 18px 48px -16px rgba(26,24,20,.32);
-  transform: translateY(-3px);
+  box-shadow: 0 26px 56px -26px rgba(26,24,20,.45);
+  transform: translateY(-4px);
 }
-.ps-card-trigger {
-  display: flex;
-  flex-direction: column;
-  text-align: left;
-  cursor: pointer;
-  width: 100%;
-  background: transparent;
-  padding: 0;
-}
-.ps-card-trigger:focus-visible {
-  outline: none;
-  box-shadow: inset 0 0 0 2px var(--sage-deep);
-  border-radius: 18px;
-}
+
+/* ── Media / product image ── */
 .ps-card-media {
   aspect-ratio: 1 / 1;
   background: #fff;
@@ -1262,87 +1250,138 @@ button { font: inherit; color: inherit; background: none; border: 0; cursor: poi
   overflow: hidden;
 }
 .ps-card-img {
-  position: absolute; inset: 7%;
-  background-size: contain;
+  position: absolute; inset: 0;
+  z-index: 1;
+  background-size: cover;
   background-position: center;
   background-repeat: no-repeat;
-  /* Show the whole product: `contain` fits the entire image inside the card,
-     with no upscale that would crop the bottle against the frame. The 7% inset
-     gives the product a little breathing room on its white backdrop. */
-  transition: transform .5s cubic-bezier(0,.2,0,1);
+  /* Product images are square photos, so `cover` fills the square tile
+     edge-to-edge with no crop. (A non-square image would be cropped to fill;
+     switch to `contain` if any image should letterbox instead.) */
+  transition: transform .6s cubic-bezier(.16,1,.3,1);
 }
-.ps-card:hover .ps-card-img { transform: scale(1.04); }
-.ps-card-foot {
-  padding: 20px 24px 16px;
+.ps-card:hover .ps-card-img { transform: scale(1.05); }
+
+/* ── Quick add: quiet at rest, reveals on hover (always shown on touch) ── */
+.ps-card-quickadd {
+  position: absolute;
+  right: 12px; bottom: 12px;
+  z-index: 3;
+  width: 38px; height: 38px;
+  border-radius: 50%;
+  background: #fff;
+  color: var(--ink);
+  border: 1px solid rgba(26,24,20,.12);
+  box-shadow: 0 6px 16px -6px rgba(26,24,20,.3);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  opacity: 0;
+  transform: translateY(8px) scale(.92);
+  transition: opacity .35s cubic-bezier(.16,1,.3,1),
+              transform .35s cubic-bezier(.16,1,.3,1),
+              background .2s ease, color .2s ease, border-color .2s ease;
+}
+.ps-card:hover .ps-card-quickadd,
+.ps-card-quickadd:focus-visible { opacity: 1; transform: none; }
+.ps-card-quickadd:hover { background: var(--ink); color: var(--cream); }
+.ps-card-quickadd:active { transform: scale(.94); }
+.ps-card-quickadd:focus-visible {
+  outline: none;
+  box-shadow: 0 0 0 2px #fff, 0 0 0 4px var(--sage-deep);
+}
+.ps-card-quickadd.is-added {
+  background: var(--sage);
+  color: #fff;
+  border-color: var(--sage);
+  opacity: 1;
+  transform: none;
+}
+.ps-card-quickadd svg { display: block; }
+
+/* ── Sold-out marker ── */
+.ps-card-soldout {
+  position: absolute;
+  left: 12px; top: 12px;
+  z-index: 3;
+  font-family: var(--sans);
+  font-size: 9.5px;
+  font-weight: 500;
+  letter-spacing: .18em;
+  text-transform: uppercase;
+  color: var(--ink-soft);
+  background: rgba(255,255,255,.92);
+  border: 1px solid rgba(26,24,20,.1);
+  padding: 5px 11px;
+  border-radius: 999px;
+}
+
+/* ── Foot (clickable text block) ── */
+.ps-card-trigger {
   display: flex;
   flex-direction: column;
-  gap: 6px;
+  text-align: left;
+  cursor: pointer;
+  width: 100%;
+  background: transparent;
+  border: 0;
+  padding: 0;
+}
+.ps-card-trigger:focus-visible {
+  outline: none;
+  box-shadow: inset 0 0 0 2px var(--sage-deep);
+}
+.ps-card-foot {
+  padding: 16px 20px 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
 }
 .ps-card-name {
   display: flex;
   flex-direction: column;
-  gap: 2px;
+  gap: 5px;
 }
 .ps-card-brand {
   font-family: var(--sans);
   font-size: 10px;
   font-weight: 500;
-  letter-spacing: .2em;
+  letter-spacing: .22em;
   text-transform: uppercase;
   color: var(--sage-deep);
 }
 .ps-card-product {
-  font-family: var(--sans);
-  font-size: 12px;
+  font-family: var(--serif);
+  font-size: 19px;
   font-weight: 400;
-  letter-spacing: .04em;
+  letter-spacing: .005em;
   color: var(--ink);
-  line-height: 1.3;
+  line-height: 1.18;
 }
 .ps-card-price {
   font-family: var(--serif);
-  font-size: 16px;
+  font-size: 15px;
   font-weight: 400;
-  letter-spacing: .02em;
-  color: var(--ink-soft);
+  letter-spacing: .01em;
+  color: var(--muted);
 }
-.ps-card-cart {
-  margin: 0 24px 22px;
-  padding: 12px 18px;
-  background: var(--ink);
-  color: var(--cream);
-  border-radius: 999px;
-  font-family: var(--sans);
-  font-size: 11px;
-  font-weight: 500;
-  letter-spacing: .22em;
-  text-transform: uppercase;
-  cursor: pointer;
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  gap: 8px;
-  transition: background .2s ease, transform .2s ease;
-}
-.ps-card-cart:hover { background: var(--sage-deep); }
-.ps-card-cart:active { transform: scale(.98); }
-.ps-card-cart:focus-visible {
-  outline: none;
-  box-shadow: 0 0 0 2px var(--cream), 0 0 0 4px var(--sage-deep);
-}
-.ps-card-cart.is-added { background: var(--sage); }
-.ps-card-cart:disabled, .pm-cart:disabled {
+.pm-cart:disabled {
   opacity: .45;
   cursor: not-allowed;
   pointer-events: none;
 }
+@media (hover: none) {
+  .ps-card-quickadd { opacity: 1; transform: none; }
+}
 @media (max-width: 768px) {
   .ps-grid { grid-template-columns: 1fr; }
-  .ps-card-foot { padding: 18px 20px 14px; }
-  .ps-card-cart { margin: 0 20px 20px; }
+  .ps-card-foot { padding: 14px 16px 18px; }
+  .ps-card-product { font-size: 17px; }
+  .ps-card-quickadd { width: 36px; height: 36px; right: 10px; bottom: 10px; opacity: 1; transform: none; }
 }
 @media (prefers-reduced-motion: reduce) {
-  .ps-card, .ps-card-img, .ps-card-cart { transition: none; }
+  .ps-card, .ps-card-img, .ps-card-quickadd { transition: none; }
   .ps-card:hover { transform: none; }
   .ps-card:hover .ps-card-img { transform: none; }
 }
@@ -2203,13 +2242,15 @@ button { font: inherit; color: inherit; background: none; border: 0; cursor: poi
 }
 .subfoot-link:hover { color: var(--sage-deep); }
 
-/* transparent overlay for card image area click */
+/* transparent overlay for card image area click (sits above the image,
+   below the quick-add button) */
 .ps-card-img-link {
   position: absolute;
   inset: 0;
   background: transparent;
+  border: 0;
   cursor: pointer;
-  z-index: 1;
+  z-index: 2;
 }
 
 /* ===========================================================

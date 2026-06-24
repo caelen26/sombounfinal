@@ -485,6 +485,22 @@ export default function ShopClient({ products }: { products: Product[] }) {
                       aria-haspopup="dialog"
                       aria-label={`View ${product.name} details`}
                     />
+                    {product.stock !== undefined && product.stock <= 0 ? (
+                      <span className="ps-card-soldout">Sold Out</span>
+                    ) : (
+                      <button
+                        type="button"
+                        className={`ps-card-quickadd${addedFlashKey === cardKey ? " is-added" : ""}`}
+                        onClick={() => addToCart(product, "card")}
+                        aria-label={`Add ${product.name} to cart`}
+                      >
+                        {addedFlashKey === cardKey ? (
+                          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.9" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><polyline points="20 6 9 17 4 12" /></svg>
+                        ) : (
+                          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" aria-hidden="true"><line x1="12" y1="5" x2="12" y2="19" /><line x1="5" y1="12" x2="19" y2="12" /></svg>
+                        )}
+                      </button>
+                    )}
                   </div>
                   <button
                     type="button"
@@ -501,20 +517,6 @@ export default function ShopClient({ products }: { products: Product[] }) {
                       <div className="ps-card-price">{formatPrice(product)}</div>
                     </div>
                   </button>
-                  {product.stock !== undefined && product.stock <= 0 ? (
-                    <button type="button" className="ps-card-cart" disabled aria-label={`${product.name} is sold out`}>
-                      Sold Out
-                    </button>
-                  ) : (
-                    <button
-                      type="button"
-                      className={`ps-card-cart${addedFlashKey === cardKey ? " is-added" : ""}`}
-                      onClick={() => addToCart(product, "card")}
-                      aria-label={`Add ${product.name} to cart`}
-                    >
-                      {addedFlashKey === cardKey ? "Added ✓" : "Add to Cart"}
-                    </button>
-                  )}
                 </div>
               );
             })}
