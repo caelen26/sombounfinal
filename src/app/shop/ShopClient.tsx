@@ -32,10 +32,8 @@ const BRAND_MAP: [string, string, string][] = [
   ["K18", "K18", "Hair Care"],
   ["evo", "evo", "Hair Care"],
 ];
-const CATEGORIES = ["All", "Hair Care", "Skin Care", "Body Care", "Wellness"];
-
-// Brands rendered as oversized "Featured" tiles on the brand landing.
-const FEATURED_BRANDS = ["Kevin Murphy", "iS Clinical", "Unite"];
+// Categories rendered as oversized "Featured" tiles on the landing.
+const FEATURED_CATEGORIES = ["Styling", "Shampoo", "Treatments & Masks"];
 
 // Sentinel for the "Shop All" tile / view (browse the whole catalogue).
 const ALL_VIEW = "__all__";
@@ -64,6 +62,34 @@ function getProductName(name: string): string {
   }
   return name;
 }
+
+// Simple product-type category from the product name, using the brand's macro
+// category to disambiguate overlaps (a hair "cream" is Styling, a skin "cream"
+// is a Moisturizer). Anything that doesn't match falls into "Other".
+function getType(name: string): string {
+  const n = name.toLowerCase();
+  const macro = getCategory(name);
+  if (/\bspf\b|sunscreen/.test(n)) return "SPF & Sun";
+  if (/body wash|body tallow|\bbody\b/.test(n)) return "Body";
+  if (/cleanser|cleansing/.test(n)) return "Cleansers";
+  if (/\btoner\b/.test(n)) return "Toners";
+  if (macro === "Wellness") return "Wellness";
+  if (/shampoo/.test(n) || (macro === "Hair Care" && /\bwash\b/.test(n))) return "Shampoo";
+  if (/conditioner|\brinse\b/.test(n)) return "Conditioner";
+  if (/treatment|mask|masque/.test(n)) return "Treatments & Masks";
+  if (/\boil\b|serum/.test(n)) return "Oils & Serums";
+  if (macro === "Skin Care") {
+    if (/cream|cr[eè]me|emulsion|moistur|tallow|\bbb\b|essence|retinol|vitamin/.test(n)) return "Moisturizers";
+    return "Other";
+  }
+  if (macro === "Hair Care") return "Styling";
+  if (/tallow|cream|cr[eè]me/.test(n)) return "Moisturizers";
+  return "Other";
+}
+
+// Sort best sellers first: featured, then lowest rank.
+const bestSort = (a: Product, b: Product) =>
+  a.featured !== b.featured ? (a.featured ? -1 : 1) : (a.rank ?? 999) - (b.rank ?? 999);
 
 // Levenshtein edit distance, for typo-tolerant ("did you mean") matching.
 function editDistance(a: string, b: string): number {
@@ -164,9 +190,9 @@ export default function ShopClient({ products }: { products: Product[] }) {
   const { cartItems, cartCount, cartSubtotal, addedFlashKey, checkoutLoading, setCheckoutLoading, addToCart, removeFromCart, updateQty, clearCart } = useCart();
   const [cartOpen, setCartOpen] = useState(false);
   const [orderSuccess, setOrderSuccess] = useState(false);
-  const [activeCategory, setActiveCategory] = useState("All");
+  const [activeCats, setActiveCats] = useState<string[]>([]);
   const [activeBrands, setActiveBrands] = useState<string[]>([]);
-  const [selectedBrand, setSelectedBrand] = useState<string | null>(null);
+  const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
   const [searchQuery, setSearchQuery] = useState("");
   const [visibleCount, setVisibleCount] = useState(20);
   const [sortBy, setSortBy] = useState<SortId>("featured");
@@ -180,57 +206,67 @@ export default function ShopClient({ products }: { products: Product[] }) {
   const cartCloseRef = useRef<HTMLButtonElement | null>(null);
   const cartTriggerRef = useRef<HTMLElement | null>(null);
 
+  // Brands are still shown on cards and offered as a filter inside "Shop All".
   const allBrands = useMemo(
     () => Array.from(new Set(products.map((p) => getBrand(p.name)))).sort(),
     [products],
   );
-  // Ordered tiles for the brand landing: featured brands become big tiles,
-  // alternating left/right and spaced through the rest so they don't stack.
-  const brandTiles = useMemo(() => {
-    const featured = FEATURED_BRANDS.filter((b) => allBrands.includes(b));
-    const rest = allBrands.filter((b) => !featured.includes(b));
-    // Big tiles: "Shop All" first, then the featured brands — sides alternate
-    // and are spaced through the rest so the big tiles don't stack in a column.
+  // Categories present in the catalogue, ordered by product count (biggest
+  // first), with "Other" pinned to the end.
+  const allCategories = useMemo(() => {
+    const count: Record<string, number> = {};
+    products.forEach((p) => { const t = getType(p.name); count[t] = (count[t] ?? 0) + 1; });
+    return Object.keys(count).sort((a, b) =>
+      a === "Other" ? 1 : b === "Other" ? -1 : count[b] - count[a]);
+  }, [products]);
+
+  // Ordered tiles for the landing: "Shop All" + featured categories are big
+  // tiles (alternating sides, spaced through the rest so they don't stack).
+  const categoryTiles = useMemo(() => {
+    const featured = FEATURED_CATEGORIES.filter((c) => allCategories.includes(c));
+    const rest = allCategories.filter((c) => !featured.includes(c));
     const bigs = [ALL_VIEW, ...featured];
     const per = rest.length ? Math.ceil(rest.length / bigs.length) : 0;
-    const tiles: { brand: string; big: boolean; side: "left" | "right"; all: boolean }[] = [];
-    bigs.forEach((b, i) => {
-      tiles.push({ brand: b, big: true, side: i % 2 === 0 ? "left" : "right", all: b === ALL_VIEW });
+    const tiles: { cat: string; big: boolean; side: "left" | "right"; all: boolean }[] = [];
+    bigs.forEach((c, i) => {
+      tiles.push({ cat: c, big: true, side: i % 2 === 0 ? "left" : "right", all: c === ALL_VIEW });
       rest.slice(i * per, (i + 1) * per).forEach((r) =>
-        tiles.push({ brand: r, big: false, side: "left", all: false }));
+        tiles.push({ cat: r, big: false, side: "left", all: false }));
     });
     rest.slice(per * bigs.length).forEach((r) =>
-      tiles.push({ brand: r, big: false, side: "left", all: false }));
+      tiles.push({ cat: r, big: false, side: "left", all: false }));
     return tiles;
-  }, [allBrands]);
+  }, [allCategories]);
 
-  // Brand cover = the image of that brand's best seller (featured first, then
-  // lowest rank). Auto-derived from the catalog, so covers track Stripe.
-  const brandCovers = useMemo(() => {
-    const byBrand: Record<string, Product[]> = {};
-    products.forEach((p) => { (byBrand[getBrand(p.name)] ??= []).push(p); });
+  // Category cover = the image of that category's best seller.
+  const categoryCovers = useMemo(() => {
+    const byCat: Record<string, Product[]> = {};
+    products.forEach((p) => { (byCat[getType(p.name)] ??= []).push(p); });
     const covers: Record<string, string> = {};
-    Object.entries(byBrand).forEach(([brand, list]) => {
-      const best = [...list].sort((a, b) =>
-        a.featured !== b.featured ? (a.featured ? -1 : 1) : (a.rank ?? 999) - (b.rank ?? 999))[0];
-      if (best) covers[brand] = best.image;
+    Object.entries(byCat).forEach(([cat, list]) => {
+      const best = [...list].sort(bestSort)[0];
+      if (best) covers[cat] = best.image;
     });
     return covers;
   }, [products]);
 
   // Cover for the "Shop All" tile: the single best seller across the catalogue.
-  const overallCover = useMemo(() => {
-    const best = [...products].sort((a, b) =>
-      a.featured !== b.featured ? (a.featured ? -1 : 1) : (a.rank ?? 999) - (b.rank ?? 999))[0];
-    return best?.image ?? "";
-  }, [products]);
+  const overallCover = useMemo(() => [...products].sort(bestSort)[0]?.image ?? "", [products]);
   const bucket = PRICE_BUCKETS.find((b) => b.id === priceBucket);
-  const filteredProducts = products.filter((p) => {
-    const brandMatch = activeBrands.length === 0 || activeBrands.includes(getBrand(p.name));
-    const catMatch = activeCategory === "All" || getCategory(p.name) === activeCategory;
+  const isAll = selectedCategory === ALL_VIEW;
+  // A single category shows only its best 10 products; "Shop All" shows all.
+  const baseProducts = useMemo(() => {
+    if (selectedCategory && selectedCategory !== ALL_VIEW) {
+      return products.filter((p) => getType(p.name) === selectedCategory).sort(bestSort).slice(0, 10);
+    }
+    return products;
+  }, [products, selectedCategory]);
+  const filteredProducts = baseProducts.filter((p) => {
+    const catMatch = !isAll || activeCats.length === 0 || activeCats.includes(getType(p.name));
+    const brandMatch = !isAll || activeBrands.length === 0 || activeBrands.includes(getBrand(p.name));
     const stockMatch = !inStockOnly || p.stock === undefined || p.stock > 0;
     const priceMatch = !bucket || bucket.test(p.price);
-    return brandMatch && catMatch && stockMatch && priceMatch;
+    return catMatch && brandMatch && stockMatch && priceMatch;
   });
   const sortedProducts = [...filteredProducts].sort((a, b) => {
     if (sortBy === "price-asc") return a.price - b.price;
@@ -262,50 +298,47 @@ export default function ShopClient({ products }: { products: Product[] }) {
 
   const toggleBrand = (brand: string) =>
     setActiveBrands((prev) => prev.includes(brand) ? prev.filter((b) => b !== brand) : [...prev, brand]);
+  const toggleCat = (cat: string) =>
+    setActiveCats((prev) => prev.includes(cat) ? prev.filter((c) => c !== cat) : [...prev, cat]);
 
-  // In the "Shop All" view, Brand is a real (multi-select) filter; inside a
-  // single brand it's the fixed page context, so it isn't counted there and
-  // "Clear all" leaves it intact (you switch brands via "← All Brands").
+  const resetFilters = () => {
+    setInStockOnly(false); setPriceBucket(null); setSortBy("featured");
+  };
+  // Category & Brand are real (multi-select) filters only in "Shop All"; inside
+  // a single category the category is the fixed page context, not a filter.
   const activeFilterCount =
-    (activeCategory !== "All" ? 1 : 0) +
-    (selectedBrand === ALL_VIEW ? activeBrands.length : 0) +
+    (isAll ? activeCats.length + activeBrands.length : 0) +
     (inStockOnly ? 1 : 0) +
     (priceBucket ? 1 : 0) +
     (sortBy !== "featured" ? 1 : 0);
   const hasActiveFilters = activeFilterCount > 0;
   const clearFilters = () => {
-    setActiveCategory("All");
-    setInStockOnly(false); setPriceBucket(null); setSortBy("featured");
-    if (selectedBrand === ALL_VIEW) setActiveBrands([]);
+    resetFilters();
+    if (isAll) { setActiveCats([]); setActiveBrands([]); }
   };
-  const selectBrand = (brand: string) => {
-    setSelectedBrand(brand);
-    setActiveBrands([brand]);
-    setActiveCategory("All"); setSortBy("featured");
-    setInStockOnly(false); setPriceBucket(null);
-    window.history.pushState({}, "", `/shop?brand=${encodeURIComponent(brand)}`);
+  const selectCategory = (cat: string) => {
+    setSelectedCategory(cat);
+    setActiveCats([]); setActiveBrands([]); resetFilters();
+    window.history.pushState({}, "", `/shop?category=${encodeURIComponent(cat)}`);
     window.scrollTo({ top: 0 });
   };
-  const backToBrands = () => {
-    setSelectedBrand(null);
-    setActiveBrands([]);
-    clearFilters();
+  const backToCategories = () => {
+    setSelectedCategory(null);
+    setActiveCats([]); setActiveBrands([]); resetFilters();
     window.history.pushState({}, "", "/shop");
     window.scrollTo({ top: 0 });
   };
   const selectAll = () => {
-    setSelectedBrand(ALL_VIEW);
-    setActiveBrands([]);
-    setActiveCategory("All"); setSortBy("featured");
-    setInStockOnly(false); setPriceBucket(null);
+    setSelectedCategory(ALL_VIEW);
+    setActiveCats([]); setActiveBrands([]); resetFilters();
     window.history.pushState({}, "", "/shop?view=all");
     window.scrollTo({ top: 0 });
   };
 
-  // Reset visible count when filters change
+  // Reset visible count when the view or filters change
   useEffect(() => {
     setVisibleCount(20);
-  }, [activeCategory, activeBrands, sortBy, inStockOnly, priceBucket]);
+  }, [selectedCategory, activeCats, activeBrands, sortBy, inStockOnly, priceBucket]);
 
   const visibleProducts = sortedProducts.slice(0, visibleCount);
   const hasMore = visibleCount < sortedProducts.length;
@@ -430,19 +463,18 @@ export default function ShopClient({ products }: { products: Product[] }) {
     return () => window.removeEventListener("scroll", onScroll);
   }, []);
 
-  // Sync the view with the URL (?view=all or ?brand=) for deep links + back/fwd.
+  // Sync the view with the URL (?view=all or ?category=) for deep links + nav.
   useEffect(() => {
     const readView = () => {
       const params = new URLSearchParams(window.location.search);
-      if (params.get("view") === "all") { setSelectedBrand(ALL_VIEW); setActiveBrands([]); return; }
-      const b = params.get("brand");
-      if (b && allBrands.includes(b)) { setSelectedBrand(b); setActiveBrands([b]); }
-      else { setSelectedBrand(null); }
+      if (params.get("view") === "all") { setSelectedCategory(ALL_VIEW); return; }
+      const c = params.get("category");
+      setSelectedCategory(c && allCategories.includes(c) ? c : null);
     };
     readView();
     window.addEventListener("popstate", readView);
     return () => window.removeEventListener("popstate", readView);
-  }, [allBrands]);
+  }, [allCategories]);
 
   const formatPrice = (product: Product) => {
     const currency = (product.currency ?? "cad").toUpperCase();
@@ -590,25 +622,25 @@ export default function ShopClient({ products }: { products: Product[] }) {
 
           {/* Editorial header */}
           <div className="shop-header">
-            {selectedBrand && (
-              <button type="button" className="shop-back" onClick={backToBrands}>
-                <span aria-hidden="true">←</span> All Brands
+            {selectedCategory && (
+              <button type="button" className="shop-back" onClick={backToCategories}>
+                <span aria-hidden="true">←</span> All Categories
               </button>
             )}
             <div className="shop-eyebrow">Somboun June</div>
             <h1 className="shop-h1">
-              {selectedBrand ? (
-                selectedBrand === ALL_VIEW ? "All Products" : selectedBrand
+              {selectedCategory ? (
+                selectedCategory === ALL_VIEW ? "All Products" : selectedCategory
               ) : (
-                <>Shop<span className="shop-h1-sub">by Brand</span></>
+                <>Shop<span className="shop-h1-sub">by Category</span></>
               )}
             </h1>
           </div>
 
           <div className="shop-rule" aria-hidden="true" />
 
-          {selectedBrand ? (
-          /* Selected brand -> product grid */
+          {selectedCategory ? (
+          /* Selected category -> product grid */
           <div className="shop-layout">
 
             {/* Product Grid */}
@@ -690,16 +722,16 @@ export default function ShopClient({ products }: { products: Product[] }) {
             </div>
           </div>
           ) : (
-            <div className="brand-grid" aria-label="Brands">
-              {brandTiles.map((t) => {
-                const cover = t.all ? overallCover : brandCovers[t.brand];
+            <div className="brand-grid" aria-label="Categories">
+              {categoryTiles.map((t) => {
+                const cover = t.all ? overallCover : categoryCovers[t.cat];
                 return (
                 <button
-                  key={t.brand}
+                  key={t.cat}
                   type="button"
                   className={`brand-tile${t.big ? ` brand-tile--big is-${t.side}` : ""}${t.all ? " brand-tile--all" : ""}`}
-                  onClick={() => (t.all ? selectAll() : selectBrand(t.brand))}
-                  aria-label={t.all ? "View all products" : `View ${t.brand} products`}
+                  onClick={() => (t.all ? selectAll() : selectCategory(t.cat))}
+                  aria-label={t.all ? "View all products" : `View ${t.cat} products`}
                 >
                   <div
                     className="brand-tile-img"
@@ -708,7 +740,7 @@ export default function ShopClient({ products }: { products: Product[] }) {
                   />
                   <div className="brand-tile-foot">
                     {t.big && <span className="brand-tile-kicker">{t.all ? "Everything" : "Featured"}</span>}
-                    <span className="brand-tile-name">{t.all ? "Shop All" : t.brand}</span>
+                    <span className="brand-tile-name">{t.all ? "Shop All" : t.cat}</span>
                   </div>
                 </button>
                 );
@@ -762,7 +794,7 @@ export default function ShopClient({ products }: { products: Product[] }) {
       {/* ── Filters & Sort (floating pill + drawer) ── */}
       <button
         type="button"
-        className={`filter-fab${selectedBrand && showFilterPill && !filterOpen ? " is-visible" : ""}`}
+        className={`filter-fab${selectedCategory && showFilterPill && !filterOpen ? " is-visible" : ""}`}
         onClick={() => setFilterOpen(true)}
         aria-haspopup="dialog"
         aria-label="Open filters and sort"
@@ -801,17 +833,18 @@ export default function ShopClient({ products }: { products: Product[] }) {
                 </div>
               </div>
 
-              <FilterSection title="Category" open={!!openSections.category} onToggle={() => toggleSection("category")}>
-                {CATEGORIES.filter((c) => c !== "All").map((cat) => (
-                  <button key={cat} type="button" className="filter-opt"
-                    onClick={() => setActiveCategory(activeCategory === cat ? "All" : cat)}>
-                    <span className={`filter-cb${activeCategory === cat ? " is-checked" : ""}`} aria-hidden="true" />
-                    {cat}
-                  </button>
-                ))}
-              </FilterSection>
+              {isAll && (
+                <FilterSection title="Category" open={!!openSections.category} onToggle={() => toggleSection("category")}>
+                  {allCategories.map((cat) => (
+                    <button key={cat} type="button" className="filter-opt" onClick={() => toggleCat(cat)}>
+                      <span className={`filter-cb${activeCats.includes(cat) ? " is-checked" : ""}`} aria-hidden="true" />
+                      {cat}
+                    </button>
+                  ))}
+                </FilterSection>
+              )}
 
-              {selectedBrand === ALL_VIEW && (
+              {isAll && (
                 <FilterSection title="Brand" open={!!openSections.brand} onToggle={() => toggleSection("brand")}>
                   {allBrands.map((brand) => (
                     <button key={brand} type="button" className="filter-opt" onClick={() => toggleBrand(brand)}>
