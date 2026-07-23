@@ -17,6 +17,14 @@
   --bubble:      #c7d0c4;
   --line:        rgba(26,24,20,.14);
 
+  /* ---- Finish layer: warm hairlines, diffused ambient depth, one motion curve ---- */
+  --hairline:    rgba(40,33,24,.09);
+  --hairline-2:  rgba(40,33,24,.14);
+  --ease-lux:    cubic-bezier(.16,1,.3,1);
+  --shadow-ambient: 0 1px 2px rgba(26,24,20,.04), 0 10px 26px -16px rgba(26,24,20,.20);
+  --shadow-lift:    0 2px 6px rgba(26,24,20,.05), 0 34px 62px -34px rgba(26,24,20,.32);
+  --inset-hi:       inset 0 1px 0 rgba(255,255,255,.55);
+
   --serif: var(--font-cormorant, "Cormorant Garamond"), serif;
   --sans:  var(--font-jost, "Jost"), system-ui, -apple-system, sans-serif;
 
@@ -1231,14 +1239,14 @@ button { font: inherit; color: inherit; background: none; border: 0; cursor: poi
   background: #fbf9f5;
   border-radius: 14px;
   overflow: hidden;
-  border: 1px solid rgba(26,24,20,.06);
-  box-shadow: 0 1px 2px rgba(26,24,20,.04);
-  transition: box-shadow .45s cubic-bezier(.16,1,.3,1),
-              transform   .45s cubic-bezier(.16,1,.3,1);
+  border: 1px solid var(--hairline);
+  box-shadow: var(--shadow-ambient);
+  transition: box-shadow .45s var(--ease-lux),
+              transform   .45s var(--ease-lux);
   width: 100%;
 }
 .ps-card:hover {
-  box-shadow: 0 26px 56px -26px rgba(26,24,20,.45);
+  box-shadow: var(--shadow-lift);
   transform: translateY(-4px);
 }
 
@@ -2712,9 +2720,9 @@ button { font: inherit; color: inherit; background: none; border: 0; cursor: poi
   padding: 0;
   display: block;
   background: #e7ddcb;
-  box-shadow: 0 1px 2px rgba(26,24,20,.05);
-  transition: box-shadow .4s cubic-bezier(.16,1,.3,1),
-              transform .4s cubic-bezier(.16,1,.3,1);
+  box-shadow: var(--shadow-ambient);
+  transition: box-shadow .4s var(--ease-lux),
+              transform .4s var(--ease-lux);
 }
 .brand-tile:nth-child(even) { background: #efe7d9; }
 .brand-tile--big { grid-column: span 2; grid-row: span 2; }
@@ -2722,7 +2730,7 @@ button { font: inherit; color: inherit; background: none; border: 0; cursor: poi
 .brand-tile--big.is-right { grid-column: 3 / span 2; }
 .brand-tile:hover {
   transform: translateY(-3px);
-  box-shadow: 0 24px 50px -24px rgba(26,24,20,.5);
+  box-shadow: var(--shadow-lift);
 }
 .brand-tile-img {
   position: absolute;
@@ -3161,3 +3169,37 @@ button { font: inherit; color: inherit; background: none; border: 0; cursor: poi
   .filter-drawer { width: 100%; }
   .filter-fab { bottom: 20px; padding: 13px 22px; font-size: 13px; }
 }
+
+/* ===========================================================
+   FINISHES — paper grain, surface depth, typographic detail
+   A thin polish layer over the existing design. Kept in one
+   block so it can be tuned or removed without side effects.
+   =========================================================== */
+
+/* Fine film-grain over the whole page so flat cream/sage grounds
+   read as physical paper rather than solid fills. Static, GPU-cheap,
+   never intercepts clicks. Desaturated so it stays neutral warm. */
+body::after {
+  content: "";
+  position: fixed;
+  inset: 0;
+  z-index: 120;
+  pointer-events: none;
+  opacity: .04;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='3' stitchTiles='stitch'/%3E%3CfeColorMatrix type='saturate' values='0'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+  background-size: 160px 160px;
+}
+
+/* Prices and any aligned figures use lining tabular numerals so
+   digits sit on a fixed width and columns don't jitter. */
+.ps-card-price,
+.price,
+.pm-price,
+.cart-line-price,
+.cart-total-value,
+.search-rec-price {
+  font-variant-numeric: tabular-nums lining-nums;
+}
+
+/* Let large display headings break where they read best. */
+h1, h2 { text-wrap: balance; }
