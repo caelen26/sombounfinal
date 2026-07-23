@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import { Cormorant_Garamond, Jost } from "next/font/google";
+import { Cormorant_Garamond, Fraunces, Jost } from "next/font/google";
 import "./globals.css";
 import { CartProvider } from "@/context/CartContext";
 
@@ -8,6 +8,15 @@ const cormorant = Cormorant_Garamond({
   weight: ["300", "400", "500"],
   style: ["normal", "italic"],
   variable: "--font-cormorant",
+  display: "swap",
+});
+
+// Smooth, rounded modern serif for product names/prices + treatment stat values.
+// Variable font: opsz for optical sizing, SOFT to round the terminals, WONK off.
+const fraunces = Fraunces({
+  subsets: ["latin"],
+  axes: ["opsz", "SOFT", "WONK"],
+  variable: "--font-fraunces",
   display: "swap",
 });
 
@@ -45,7 +54,7 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en" className={`${cormorant.variable} ${jost.variable}`}>
+    <html lang="en" className={`${cormorant.variable} ${fraunces.variable} ${jost.variable}`}>
       <body>
         <script
           type="application/ld+json"
